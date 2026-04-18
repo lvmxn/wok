@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+# VSCode
+.vscode/
+# SQLite
+*.sqlite3
+*.db
+# User files
+plan.md
