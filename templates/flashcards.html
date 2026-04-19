@@ -12,12 +12,24 @@
                 <a href="#" class="btn" id="toggle-btn">Show translation</a>
             </div>
         </div>
+    <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-primary" onclick="answer(123, 'forgot')">Forgot</button>
+        <button type="button" class="btn btn-primary" onclick="answer(123, 'hard')">Hard</button>
+        <button type="button" class="btn btn-primary" onclick="answer(123, 'normal')">Normal</button>
+        <button type="button" class="btn btn-primary" onclick="answer(123, 'easy')">Easy</button>
+    </div>
     </div>
 
     <script>
-        const word = "{{ word }}";
-        const translation = "{{ translation }}";
+        const words = {{ words | safe }};
+        let num = 0;
         let showingWord = true;
+        let word = words[num].word;
+        let translation = words[num].translation;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('flashcard-text').textContent = word;
+        });
 
         document.getElementById('toggle-btn').addEventListener('click', function(e) {
             e.preventDefault();
@@ -31,5 +43,27 @@
             }
             showingWord = !showingWord;
         });
-    </script>
+
+        function showNextCard() {
+            num++;
+            word = words[num].word;
+            translation = words[num].translation;
+            document.getElementById('toggle-btn').textContent = "Show translation";
+            showingWord = true;
+            document.getElementById('flashcard-text').textContent = word;
+        }
+
+        async function answer(wordId, quality) {
+            const response = await fetch('/flashcards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: wordId, rating: quality })
+            });
+        
+            if (response.ok) {
+                showNextCard();
+            }
+        }
+
+        </script>
 {% endblock %}
