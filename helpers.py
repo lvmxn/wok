@@ -1,6 +1,8 @@
 import sqlite3
 from flask import redirect, session
 from functools import wraps
+import translators as ts
+
 
 def login_required(f):
     @wraps(f)
@@ -23,3 +25,8 @@ class Database:
                 return [dict(row) for row in cursor.fetchall()]
             conn.commit()
             return cursor.rowcount
+
+def translate(word):        
+    query_text = word
+    result = ts.translate_text(query_text, translator='bing', from_language='en', to_language='ru')
+    return(result)

@@ -1,5 +1,5 @@
 import os
-from helpers import Database
+from helpers import Database, login_required, translate
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
