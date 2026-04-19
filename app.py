@@ -10,7 +10,11 @@ app.secret_key = os.environ.get('SECRET_KEY', '123')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try: 
+        username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]['username']
+    except:
+        username = ""
+    return render_template('index.html', username = username)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
