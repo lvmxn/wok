@@ -12,3 +12,4 @@ venv/
 *.db
 # User files
 plan.md
+clean.sql

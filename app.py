@@ -1,5 +1,5 @@
 import os
-from helpers import Database, login_required, translate
+from helpers import Database, login_required, translate, start
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -32,6 +32,7 @@ def register():
         password_hash = generate_password_hash(password)
         db.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", username, password_hash)
         session['user_id'] = db.execute("SELECT id FROM users WHERE username = ?", username)[0]['id']
+        start(db,session['user_id'])
         return redirect(url_for('index'))
     return render_template('register.html')
 
@@ -54,6 +55,11 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/tasks', methods=['GET', 'POST'])
+@login_required
+def tasks():
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True)
