@@ -56,10 +56,15 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-@app.route('/tasks', methods=['GET', 'POST'])
+@app.route('/tasks')
 @login_required
 def tasks():
-    pass
+    return render_template("tasks.html")
+
+@app.route('/flashcards')
+@login_required
+def flashcards():
+    return render_template("flashcards.html",word="qw",translation = "wq")
 
 if __name__ == '__main__':
     app.run(debug=True)

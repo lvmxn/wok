@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}
+   Flashcards
+{% endblock %}
+
+{% block main %}
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title" id="flashcard-text">{{ word }}</h5>
+                <a href="#" class="btn" id="toggle-btn">Show translation</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const word = "{{ word }}";
+        const translation = "{{ translation }}";
+        let showingWord = true;
+
+        document.getElementById('toggle-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const textElem = document.getElementById('flashcard-text');
+            if (showingWord) {
+                textElem.textContent = translation;
+                this.textContent = "Show word";
+            } else {
+                textElem.textContent = word;
+                this.textContent = "Show translation";
+            }
+            showingWord = !showingWord;
+        });
+    </script>
+{% endblock %}

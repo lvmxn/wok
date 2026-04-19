@@ -41,3 +41,17 @@ button {
 .main-content {
     padding: 20px;
 }
+
+.card{
+    background-color: #40C9A2;
+    padding: 10px 20px;
+    border-radius: 20px;
+}
+
+.btn{
+    background-color: #A3F7B5;
+}
+
+.btn:hover {
+    background-color: #2F9C95;
+}
