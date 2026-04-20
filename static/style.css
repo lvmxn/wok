@@ -50,8 +50,17 @@ button {
 
 .btn{
     background-color: #A3F7B5;
+    border: none;
+    color: rgb(0, 0, 0);
 }
 
 .btn:hover {
     background-color: #2F9C95;
+    color: rgb(0, 0, 0);
+}
+
+.btn:active {
+    background-color: #2F9C95 !important;
+    color: #fff !important;
+    transform: translateY(2px);
 }
