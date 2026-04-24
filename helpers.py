@@ -2,9 +2,10 @@ import sqlite3
 from flask import redirect, session
 from functools import wraps
 import translators as ts
-from datetime import date
+from datetime import date, timedelta
 
 RANDOM_WORD_START_COUNT = 50
+
 
 def login_required(f):
     @wraps(f)
@@ -12,7 +13,9 @@ def login_required(f):
         if session.get("user_id") is None:
             return redirect("/login")
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 class Database:
     def __init__(self, db_path):
@@ -28,18 +31,33 @@ class Database:
             conn.commit()
             return cursor.rowcount
 
-def translate(word):        
+
+def translate(word):
     query_text = word
-    result = ts.translate_text(query_text, translator='bing', from_language='en', to_language='ru')
-    return(result)
+    result = ts.translate_text(
+        query_text, translator="bing", from_language="en", to_language="ru"
+    )
+    return result
+
 
 def now():
     return date.today().strftime("%Y-%m-%d")
 
+
+def next_r(interval):
+    new_date = date.today() + timedelta(days=interval)
+    return new_date.strftime("%Y-%m-%d")
+
+
 def start(db, user_id):
-    db.execute("""
+    db.execute(
+        """
         INSERT INTO user_words (user_id, next_review, word_id)
         SELECT ?, ?, id FROM words 
         ORDER BY RANDOM() 
         LIMIT ?
-    """, user_id, now(), RANDOM_WORD_START_COUNT)
+    """,
+        user_id,
+        now(),
+        RANDOM_WORD_START_COUNT,
+    )

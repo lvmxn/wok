@@ -1,6 +1,7 @@
 import os
+from math import ceil
 from json import dumps
-from helpers import Database, login_required, translate, start, now
+from helpers import Database, login_required, translate, start, now, next_r
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -86,6 +87,44 @@ def tasks():
 @login_required
 def flashcards():
     if request.method == "POST":
+        data_j = request.get_json()
+        word = data_j.get("word")
+        quality = data_j.get("quality")
+        data_db = db.execute(
+            "SELECT ease_factor, interval FROM user_words WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+            session["user_id"],
+            word,
+        )
+        ease_factor = data_db[0]["ease_factor"]
+        interval = data_db[0]["interval"]
+        match quality:
+            case "forgot":
+                ease_factor -= 0.2
+                interval = 1
+            case "hard":
+                ease_factor -= 0.15
+                interval *= 1.2
+            case "normal":
+                ease_factor = ease_factor
+                interval *= ease_factor
+            case "easy":
+                ease_factor += 0.15
+                interval *= ease_factor * 1.3
+        if ease_factor < 1.3:
+            ease_factor = 1.3
+        if interval < 4:
+            interval = max(1, round(interval))
+        else:
+            interval = max(1, ceil(interval))
+        next_review = next_r(interval)
+        db.execute(
+            "UPDATE user_words SET ease_factor = ?, interval = ?, next_review = ? WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+            ease_factor,
+            interval,
+            next_review,
+            session["user_id"],
+            word,
+        )
         return jsonify({"status": "success"}), 200
     words = db.execute(
         """SELECT 
@@ -99,9 +138,9 @@ def flashcards():
             ORDER BY uw.next_review ASC
             LIMIT 50""",
         session["user_id"],
-        now()
+        now(),
     )
-    return render_template("flashcards.html", words = dumps(words))
+    return render_template("flashcards.html", words=dumps(words))
 
 
 if __name__ == "__main__":
