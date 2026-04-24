@@ -13,10 +13,10 @@
             </div>
         </div>
     <div class="btn-group" role="group" aria-label="Basic example">
-        <button type="button" class="btn btn-primary" onclick="answer(123, 'forgot')">Forgot</button>
-        <button type="button" class="btn btn-primary" onclick="answer(123, 'hard')">Hard</button>
-        <button type="button" class="btn btn-primary" onclick="answer(123, 'normal')">Normal</button>
-        <button type="button" class="btn btn-primary" onclick="answer(123, 'easy')">Easy</button>
+        <button type="button" class="btn btn-primary" onclick="answer('forgot')">Forgot</button>
+        <button type="button" class="btn btn-primary" onclick="answer('hard')">Hard</button>
+        <button type="button" class="btn btn-primary" onclick="answer('normal')">Normal</button>
+        <button type="button" class="btn btn-primary" onclick="answer('easy')">Easy</button>
     </div>
     </div>
 
@@ -53,11 +53,11 @@
             document.getElementById('flashcard-text').textContent = word;
         }
 
-        async function answer(wordId, quality) {
+        async function answer(quality) {
             const response = await fetch('/flashcards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: wordId, rating: quality })
+                body: JSON.stringify({ word: word, quality: quality })
             });
         
             if (response.ok) {
