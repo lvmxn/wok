@@ -8,7 +8,7 @@
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
         <div class="card" style="width: 18rem;">
             <div class="card-body">
-                <h5 class="card-title" id="flashcard-text">{{ word }}</h5>
+                <h5 class="card-title" id="flashcard-text"></h5>
                 <a href="#" class="btn" id="toggle-btn">Show translation</a>
             </div>
         </div>
@@ -24,14 +24,25 @@
         const words = {{ words | safe }};
         let num = 0;
         let showingWord = true;
-        let word = words[num].word;
-        let translation = words[num].translation;
+        let word = '';
+        let translation = '';
+        let finish = false;
+        if (words.length == 0)
+        {   
+            exit("empty");
+        }
+        else
+        {
+            word = words[num].word;
+            translation = words[num].translation;
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('flashcard-text').textContent = word;
         });
 
         document.getElementById('toggle-btn').addEventListener('click', function(e) {
+            if (finish) return;
             e.preventDefault();
             const textElem = document.getElementById('flashcard-text');
             if (showingWord) {
@@ -44,8 +55,13 @@
             showingWord = !showingWord;
         });
 
-        function showNextCard() {
+        async function showNextCard() {
             num++;
+            if (num >= words.length)
+            {
+                exit("finish");
+                return ;
+            }
             word = words[num].word;
             translation = words[num].translation;
             document.getElementById('toggle-btn').textContent = "Show translation";
@@ -65,5 +81,31 @@
             }
         }
 
+        function disable() {
+            const toggle = document.getElementById('toggle-btn')
+            toggle.textContent = "To main page"
+            toggle.href = "/";
+            toggle.style.pointerEvents = "auto";
+            const buttons=document.getElementsByClassName('btn-primary');
+            for (let i = 0; i < buttons.length; i++)
+            {
+                buttons[i].disabled = true;
+            }
+        }
+
+        async function exit(reason)
+        {
+            if (reason == 'empty')
+            {
+                word = "No cards for this time";
+            }
+            else if (reason == 'finish')
+            {
+                word = "Task finished";
+            }
+            document.getElementById('flashcard-text').textContent = word;
+            disable();
+            finish = true;
+        }
         </script>
 {% endblock %}

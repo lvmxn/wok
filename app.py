@@ -123,7 +123,7 @@ def flashcards():
             interval,
             next_review,
             session["user_id"],
-            word,
+            word
         )
         return jsonify({"status": "success"}), 200
     words = db.execute(
