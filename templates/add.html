@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+   Add
+{% endblock %}
+
+{% block main %}
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
+        <form action="/add" method="post">
+            <div class="mb-3">
+                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="word" placeholder="Word" type="text">
+            </div>
+            <button type="submit">Translate and add to your words</button>
+        </form>
+        <hr>
+        {% if word %}
+            <div class="card">
+                <div class="card-body">
+                    <h5>pair "{{ word }}" - "{{ translation }}" added to yor words</h5>
+
+                </div>
+            </div>
+        {% endif %}
+{% endblock %}

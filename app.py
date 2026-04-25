@@ -1,7 +1,7 @@
 import os
 from math import ceil
 from json import dumps
-from helpers import Database, login_required, translate, start, now, next_r
+from helpers import Database, login_required, translate, start, now, next_r, word_lang
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -142,6 +142,27 @@ def flashcards():
     )
     return render_template("flashcards.html", words=dumps(words))
 
+@app.route("/add", methods=["GET", "POST"])
+@login_required
+def add():
+    if request.method == "POST":
+        word =request.form.get("word")
+        w = word.strip().lower()
+        '''if not w:
+            return error()'''
+        if word_lang(w) == 'ru':
+            translation = translate(w,'ru','en')
+        else:
+            translation = translate(w,'en','ru')
+        word_id = db.execute('''INSERT INTO words (word, translation)
+            VALUES (?, ?)
+            ON CONFLICT(word) DO UPDATE SET word = words.word
+            RETURNING id''', w,translation)[0]["id"]
+        db.execute('''INSERT INTO user_words (user_id, word_id, next_review)
+            VALUES (?, ?, ?)
+            ON CONFLICT(user_id, word_id) DO NOTHING''', session["user_id"],word_id,now())
+        return render_template("add.html", word = w, translation = translation)
+    return render_template("add.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

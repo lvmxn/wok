@@ -26,16 +26,15 @@ class Database:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute(query, args)
-            if query.strip().upper().startswith("SELECT"):
+            if cursor.description is not None:
                 return [dict(row) for row in cursor.fetchall()]
             conn.commit()
             return cursor.rowcount
 
 
-def translate(word):
-    query_text = word
+def translate(word,f_lang,t_lang):
     result = ts.translate_text(
-        query_text, translator="bing", from_language="en", to_language="ru"
+        word, translator="bing", from_language=f_lang, to_language=t_lang
     )
     return result
 
@@ -61,3 +60,13 @@ def start(db, user_id):
         now(),
         RANDOM_WORD_START_COUNT,
     )
+
+def word_lang(word):
+    has_cyr = any("а" <= ch <= "я" or ch == "ё" for ch in word)
+    has_lat = any("a" <= ch <= "z" for ch in word)
+
+    if has_cyr and not has_lat:
+        return 'ru'
+    if has_lat and not has_cyr:
+        return 'en'
+    #error()
