@@ -105,11 +105,11 @@ def flashcards():
                 ease_factor -= 0.15
                 interval *= 1.2
             case "normal":
-                ease_factor = ease_factor
                 interval *= ease_factor
             case "easy":
                 ease_factor += 0.15
                 interval *= ease_factor * 1.3
+        ease_factor = round(ease_factor, 2)
         if ease_factor < 1.3:
             ease_factor = 1.3
         if interval < 4:
