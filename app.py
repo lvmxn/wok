@@ -164,5 +164,21 @@ def add():
         return render_template("add.html", word = w, translation = translation)
     return render_template("add.html")
 
+@app.route("/my_words")
+@login_required
+def my_words():
+    words = db.execute('''SELECT 
+        w.word, 
+        w.translation, 
+        uw.next_review,
+        uw.correct_count,
+        uw.wrong_count               
+        FROM words w
+        JOIN user_words uw ON w.id = uw.word_id
+        WHERE uw.user_id = ? 
+        ORDER BY uw.next_review ASC''',
+        session["user_id"])
+    return render_template("my_words.html",words=words)
+
 if __name__ == "__main__":
     app.run(debug=True)

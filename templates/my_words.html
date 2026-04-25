@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+   My words
+{% endblock %}
+
+{% block main %}
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
+        <table class="table">
+            <thead>
+                <tr>
+                <th scope="col">#</th>
+                <th scope="col">Word</th>
+                <th scope="col">Translation</th>
+                <th scope="col">Next review</th>
+                <th scope="col">Correct count</th>
+                <th scope="col">Wrong count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for word in words%}
+                    <tr>
+                    <th scope="row">{{loop.index}}</th>
+                    <td>{{word["word"]}}</td>
+                    <td>{{word["translation"]}}</td>
+                    <td>{{word["next_review"]}}</td>
+                    <td>{{word["correct_count"]}}</td>
+                    <td>{{word["wrong_count"]}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
