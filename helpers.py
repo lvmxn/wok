@@ -33,9 +33,17 @@ class Database:
 
 
 def translate(word,f_lang,t_lang):
-    result = ts.translate_text(
-        word, translator="bing", from_language=f_lang, to_language=t_lang
-    )
+    ts_list = ["google","yandex","bing","deepl"]
+    i=0
+    try:
+        result = ts.translate_text(
+            word, translator=ts_list[i], from_language=f_lang, to_language=t_lang
+        )
+    except:
+        i+=1
+        result = ts.translate_text(
+            word, translator=ts_list[i], from_language=f_lang, to_language=t_lang
+        )
     return result
 
 
