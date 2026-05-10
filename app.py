@@ -2,7 +2,7 @@ import os
 from math import ceil
 from json import dumps
 from helpers import Database, login_required, translate, start, now, next_r
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
@@ -10,6 +10,13 @@ app = Flask(__name__)
 db = Database("database.db")
 app.secret_key = os.environ.get("SECRET_KEY", "123")
 
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("error.html", error_code=404, error_message="Not found"), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return render_template("error.html", error_code=500, error_message="Server error"), 500
 
 @app.route("/")
 def index():
@@ -19,10 +26,13 @@ def index():
 def inject_user():
     if session.get("user_id") is None:
         return {"username": ""}
-    username = db.execute(
-        "SELECT username FROM users WHERE id = ?",
-        session["user_id"]
-    )[0]["username"]
+    try:
+        username = db.execute(
+            "SELECT username FROM users WHERE id = ?",
+            session["user_id"]
+        )[0]["username"]
+    except:
+        username=''
     return {"username": username}
 
 @app.route("/register", methods=["GET", "POST"])
@@ -32,12 +42,15 @@ def register():
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
         if not username or not password or not confirmation:
-            return render_template("register.html", error="All fields are required.")
+            flash("All fields are required.", "danger")
+            return redirect(url_for("register"))
         if password != confirmation:
-            return render_template("register.html", error="Passwords do not match.")
+            flash("Passwords do not match.", "danger")
+            return redirect(url_for("register"))
         existing_user = db.execute("SELECT * FROM users WHERE username = ?", username)
         if existing_user:
-            return render_template("register.html", error="Username already taken.")
+            flash("Username already taken.", "danger")
+            return redirect(url_for("register"))
         password_hash = generate_password_hash(password)
         db.execute(
             "INSERT INTO users (username, password_hash) VALUES (?, ?)",
