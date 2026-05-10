@@ -13,14 +13,17 @@ app.secret_key = os.environ.get("SECRET_KEY", "123")
 
 @app.route("/")
 def index():
-    try:
-        username = db.execute(
-            "SELECT username FROM users WHERE id = ?", session["user_id"]
-        )[0]["username"]
-    except:
-        username = ""
-    return render_template("index.html", username=username)
+    return render_template("index.html")
 
+@app.context_processor
+def inject_user():
+    if session.get("user_id") is None:
+        return {"username": ""}
+    username = db.execute(
+        "SELECT username FROM users WHERE id = ?",
+        session["user_id"]
+    )[0]["username"]
+    return {"username": username}
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
