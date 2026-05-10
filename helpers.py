@@ -32,19 +32,34 @@ class Database:
             return cursor.rowcount
 
 
-def translate(word,f_lang,t_lang):
+def translate(word):
     ts_list = ["google","yandex","bing","deepl"]
-    i=0
-    try:
-        result = ts.translate_text(
-            word, translator=ts_list[i], from_language=f_lang, to_language=t_lang
-        )
-    except:
-        i+=1
-        result = ts.translate_text(
-            word, translator=ts_list[i], from_language=f_lang, to_language=t_lang
-        )
-    return result
+    has_cyr = any("а" <= ch <= "я" or ch == "ё" or ch == ' ' for ch in word)
+    has_lat = any("a" <= ch <= "z" or ch == ' ' for ch in word)
+    f_lang = ''
+    t_lang = ''
+
+    if has_cyr and not has_lat:
+        f_lang = 'ru'
+        t_lang = 'en'
+    elif has_lat and not has_cyr:
+        f_lang = 'en'
+        t_lang = 'ru'
+    else:
+        pass
+        #error
+    
+    for i in ts_list:
+        try:
+            result = ts.translate_text(
+                word, translator=i, from_language=f_lang, to_language=t_lang
+            )
+            return result
+        except Exception as error:
+            last_error = error
+
+    raise last_error
+    
 
 
 def now():
@@ -68,13 +83,3 @@ def start(db, user_id):
         now(),
         RANDOM_WORD_START_COUNT,
     )
-
-def word_lang(word):
-    has_cyr = any("а" <= ch <= "я" or ch == "ё" for ch in word)
-    has_lat = any("a" <= ch <= "z" for ch in word)
-
-    if has_cyr and not has_lat:
-        return 'ru'
-    if has_lat and not has_cyr:
-        return 'en'
-    #error()

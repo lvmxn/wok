@@ -1,7 +1,7 @@
 import os
 from math import ceil
 from json import dumps
-from helpers import Database, login_required, translate, start, now, next_r, word_lang
+from helpers import Database, login_required, translate, start, now, next_r
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -150,10 +150,7 @@ def add():
         w = word.strip().lower()
         '''if not w:
             return error()'''
-        if word_lang(w) == 'ru':
-            translation = translate(w,'ru','en')
-        else:
-            translation = translate(w,'en','ru')
+        translation = translate(w)
         word_id = db.execute('''INSERT INTO words (word, translation)
             VALUES (?, ?)
             ON CONFLICT(word) DO UPDATE SET word = words.word
