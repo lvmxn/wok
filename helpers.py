@@ -69,17 +69,17 @@ def translate(word):
 
 
 def now():
-    return datetime.now().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now().replace(second=0, microsecond=0).strftime("%Y-%m-%d %H:%M")
 
 
 def next_r(interval):
     new_date = datetime.now() + timedelta(days=interval)
-    return new_date.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+    return new_date.replace(second=0, microsecond=0).strftime("%Y-%m-%d %H:%M")
 
 
 def next_minutes(minutes):
     new_date = datetime.now() + timedelta(minutes=minutes)
-    return new_date.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+    return new_date.replace(second=0, microsecond=0).strftime("%Y-%m-%d %H:%M")
 
 
 def start(db, user_id):
