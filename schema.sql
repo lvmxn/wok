@@ -19,7 +19,7 @@ CREATE TABLE user_words (
     interval INTEGER DEFAULT 1,
     next_review TEXT,
     count INTEGER DEFAULT 0,
-    is_learning INTEGER DEFAULT 1,
+    is_learning INTEGER DEFAULT 2,
     UNIQUE(user_id, word_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE
