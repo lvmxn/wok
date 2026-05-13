@@ -2,26 +2,49 @@ import os
 import sqlite3
 from math import ceil
 from json import dumps
-from helpers import Database, TranslationError, login_required, translate, start, now, next_r
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from helpers import (
+    Database,
+    TranslationError,
+    login_required,
+    translate,
+    start,
+    now,
+    next_r,
+)
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
+    flash,
+)
 from werkzeug.security import check_password_hash, generate_password_hash
-
 
 app = Flask(__name__)
 db = Database("database.db")
 app.secret_key = os.environ.get("SECRET_KEY", "123")
 
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template("error.html", error_code=404, error_message="Not found"), 404
 
+
 @app.errorhandler(500)
 def server_error(error):
-    return render_template("error.html", error_code=500, error_message="Server error"), 500
+    return (
+        render_template("error.html", error_code=500, error_message="Server error"),
+        500,
+    )
+
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.context_processor
 def inject_user():
@@ -29,12 +52,12 @@ def inject_user():
         return {"username": ""}
     try:
         username = db.execute(
-            "SELECT username FROM users WHERE id = ?",
-            session["user_id"]
+            "SELECT username FROM users WHERE id = ?", session["user_id"]
         )[0]["username"]
     except (IndexError, sqlite3.Error):
-        username = ''
+        username = ""
     return {"username": username}
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -49,7 +72,9 @@ def register():
             flash("Passwords do not match.", "danger")
             return redirect(url_for("register"))
         try:
-            existing_user = db.execute("SELECT * FROM users WHERE username = ?", username)
+            existing_user = db.execute(
+                "SELECT * FROM users WHERE username = ?", username
+            )
             if existing_user:
                 flash("Username already taken.", "danger")
                 return redirect(url_for("register"))
@@ -87,7 +112,9 @@ def login():
         except sqlite3.Error:
             flash("Login is temporarily unavailable.", "danger")
             return redirect(url_for("login"))
-        if not user_rows or not check_password_hash(user_rows[0]["password_hash"], password):
+        if not user_rows or not check_password_hash(
+            user_rows[0]["password_hash"], password
+        ):
             flash("Passwords do not match.", "danger")
             return redirect(url_for("login"))
         session["user_id"] = user_rows[0]["id"]
@@ -123,7 +150,10 @@ def flashcards():
                 word,
             )
         except sqlite3.Error:
-            return jsonify({"status": "error", "message": "Could not update review"}), 500
+            return (
+                jsonify({"status": "error", "message": "Could not update review"}),
+                500,
+            )
         if not data_db:
             return jsonify({"status": "error", "message": "Word not found"}), 404
         ease_factor = data_db[0]["ease_factor"]
@@ -155,7 +185,7 @@ def flashcards():
                 interval,
                 next_review,
                 session["user_id"],
-                word
+                word,
             )
         except sqlite3.Error:
             return jsonify({"status": "error", "message": "Could not save review"}), 500
@@ -176,6 +206,7 @@ def flashcards():
     )
     return render_template("flashcards.html", words=dumps(words))
 
+
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def add():
@@ -187,23 +218,34 @@ def add():
         w = word.strip().lower()
         try:
             translation = translate(w)
-            word_id = db.execute('''INSERT INTO words (word, translation)
+            word_id = db.execute(
+                """INSERT INTO words (word, translation)
                 VALUES (?, ?)
                 ON CONFLICT(word) DO UPDATE SET word = words.word
-                RETURNING id''', w,translation)[0]["id"]
-            db.execute('''INSERT INTO user_words (user_id, word_id, next_review)
+                RETURNING id""",
+                w,
+                translation,
+            )[0]["id"]
+            db.execute(
+                """INSERT INTO user_words (user_id, word_id, next_review)
                 VALUES (?, ?, ?)
-                ON CONFLICT(user_id, word_id) DO NOTHING''', session["user_id"],word_id,now())
+                ON CONFLICT(user_id, word_id) DO NOTHING""",
+                session["user_id"],
+                word_id,
+                now(),
+            )
         except (TranslationError, sqlite3.Error):
             flash("Could not add that word right now.", "danger")
             return redirect(url_for("add"))
-        return render_template("add.html", word = w, translation = translation)
+        return render_template("add.html", word=w, translation=translation)
     return render_template("add.html")
+
 
 @app.route("/my_words")
 @login_required
 def my_words():
-    words = db.execute('''SELECT 
+    words = db.execute(
+        """SELECT 
         w.word, 
         w.translation, 
         uw.next_review,
@@ -211,9 +253,11 @@ def my_words():
         FROM words w
         JOIN user_words uw ON w.id = uw.word_id
         WHERE uw.user_id = ? 
-        ORDER BY uw.next_review ASC''',
-        session["user_id"])
-    return render_template("my_words.html",words=words)
+        ORDER BY uw.next_review ASC""",
+        session["user_id"],
+    )
+    return render_template("my_words.html", words=words)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

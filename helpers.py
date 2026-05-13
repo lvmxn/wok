@@ -37,21 +37,21 @@ class Database:
 
 
 def translate(word):
-    ts_list = ["google","yandex","bing","deepl"]
-    has_cyr = any("а" <= ch <= "я" or ch == "ё" or ch == ' ' for ch in word)
-    has_lat = any("a" <= ch <= "z" or ch == ' ' for ch in word)
-    f_lang = ''
-    t_lang = ''
+    ts_list = ["google", "yandex", "bing", "deepl"]
+    has_cyr = any("а" <= ch <= "я" or ch == "ё" or ch == " " for ch in word)
+    has_lat = any("a" <= ch <= "z" or ch == " " for ch in word)
+    f_lang = ""
+    t_lang = ""
 
     if has_cyr and not has_lat:
-        f_lang = 'ru'
-        t_lang = 'en'
+        f_lang = "ru"
+        t_lang = "en"
     elif has_lat and not has_cyr:
-        f_lang = 'en'
-        t_lang = 'ru'
+        f_lang = "en"
+        t_lang = "ru"
     else:
         raise TranslationError("Unsupported word language")
-    
+
     last_error = None
     for i in ts_list:
         try:
@@ -65,7 +65,6 @@ def translate(word):
     if last_error is None:
         raise TranslationError("Translation failed")
     raise last_error
-    
 
 
 def now():
