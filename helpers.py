@@ -7,6 +7,10 @@ from datetime import date, timedelta
 RANDOM_WORD_START_COUNT = 50
 
 
+class TranslationError(RuntimeError):
+    pass
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -46,9 +50,9 @@ def translate(word):
         f_lang = 'en'
         t_lang = 'ru'
     else:
-        pass
-        #error
+        raise TranslationError("Unsupported word language")
     
+    last_error = None
     for i in ts_list:
         try:
             result = ts.translate_text(
@@ -58,6 +62,8 @@ def translate(word):
         except Exception as error:
             last_error = error
 
+    if last_error is None:
+        raise TranslationError("Translation failed")
     raise last_error
     
 

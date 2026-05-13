@@ -2,7 +2,7 @@ import os
 import sqlite3
 from math import ceil
 from json import dumps
-from helpers import Database, login_required, translate, start, now, next_r
+from helpers import Database, TranslationError, login_required, translate, start, now, next_r
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -194,7 +194,7 @@ def add():
             db.execute('''INSERT INTO user_words (user_id, word_id, next_review)
                 VALUES (?, ?, ?)
                 ON CONFLICT(user_id, word_id) DO NOTHING''', session["user_id"],word_id,now())
-        except Exception:
+        except (TranslationError, sqlite3.Error):
             flash("Could not add that word right now.", "danger")
             return redirect(url_for("add"))
         return render_template("add.html", word = w, translation = translation)
