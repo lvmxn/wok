@@ -18,8 +18,8 @@ CREATE TABLE user_words (
     ease_factor REAL DEFAULT 2.5,
     interval INTEGER DEFAULT 1,
     next_review TEXT,
-    correct_count INTEGER DEFAULT 0,
-    wrong_count INTEGER DEFAULT 0,
+    count INTEGER DEFAULT 0,
+    is_learning INTEGER DEFAULT 1,
     UNIQUE(user_id, word_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE

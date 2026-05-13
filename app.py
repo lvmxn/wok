@@ -150,7 +150,7 @@ def flashcards():
         next_review = next_r(interval)
         try:
             db.execute(
-                "UPDATE user_words SET ease_factor = ?, interval = ?, next_review = ? WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+                "UPDATE user_words SET ease_factor = ?, interval = ?, next_review = ?, count = count + 1 WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
                 ease_factor,
                 interval,
                 next_review,
@@ -207,8 +207,7 @@ def my_words():
         w.word, 
         w.translation, 
         uw.next_review,
-        uw.correct_count,
-        uw.wrong_count               
+        uw.count               
         FROM words w
         JOIN user_words uw ON w.id = uw.word_id
         WHERE uw.user_id = ? 
