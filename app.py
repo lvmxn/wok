@@ -72,14 +72,16 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         if not username or not password:
-            return render_template("register.html", error="All fields are required.")
+            flash("All fields are required.", "danger")
+            return redirect(url_for("login"))
         if not check_password_hash(
             db.execute("SELECT password_hash FROM users WHERE username = ?", username)[
                 0
             ]["password_hash"],
             password,
         ):
-            return render_template("register.html", error="Passwords do not match.")
+            flash("Passwords do not match.", "danger")
+            return redirect(url_for("login"))
         session["user_id"] = db.execute(
             "SELECT id FROM users WHERE username = ?", username
         )[0]["id"]
@@ -162,10 +164,11 @@ def flashcards():
 @login_required
 def add():
     if request.method == "POST":
-        word =request.form.get("word")
+        word = request.form.get("word")
+        if not word:
+            flash("All fields are required.", "danger")
+            return redirect(url_for("add"))
         w = word.strip().lower()
-        '''if not w:
-            return error()'''
         translation = translate(w)
         word_id = db.execute('''INSERT INTO words (word, translation)
             VALUES (?, ?)
