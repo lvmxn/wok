@@ -9,7 +9,9 @@ from helpers import (
     translate,
     start,
     now,
+    next_minutes,
     next_r,
+    schedule_review,
 )
 from flask import (
     Flask,
@@ -133,7 +135,6 @@ def logout():
 def tasks():
     return render_template("tasks.html")
 
-
 @app.route("/flashcards", methods=["GET", "POST"])
 @login_required
 def flashcards():
@@ -145,7 +146,7 @@ def flashcards():
         quality = data_j.get("quality")
         try:
             data_db = db.execute(
-                "SELECT ease_factor, interval FROM user_words WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+                "SELECT ease_factor, interval, learning, repetitions, lapses FROM user_words WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
                 session["user_id"],
                 word,
             )
@@ -156,33 +157,24 @@ def flashcards():
             )
         if not data_db:
             return jsonify({"status": "error", "message": "Word not found"}), 404
-        ease_factor = data_db[0]["ease_factor"]
-        interval = data_db[0]["interval"]
-        match quality:
-            case "forgot":
-                ease_factor -= 0.2
-                interval = 1
-            case "hard":
-                ease_factor -= 0.15
-                interval *= 1.2
-            case "normal":
-                interval *= ease_factor
-            case "easy":
-                ease_factor += 0.15
-                interval *= ease_factor * 1.3
-        ease_factor = round(ease_factor, 2)
-        if ease_factor < 1.3:
-            ease_factor = 1.3
-        if interval < 4:
-            interval = max(1, round(interval))
-        else:
-            interval = max(1, ceil(interval))
-        next_review = next_r(interval)
+
+        ease_factor, interval, learning, repetitions, lapses, next_review = schedule_review(
+            data_db[0]["ease_factor"],
+            data_db[0]["interval"],
+            data_db[0]["learning"],
+            data_db[0]["repetitions"],
+            data_db[0]["lapses"],
+            quality,
+        )
+
         try:
             db.execute(
-                "UPDATE user_words SET ease_factor = ?, interval = ?, next_review = ?, count = count + 1 WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+                "UPDATE user_words SET ease_factor = ?, interval = ?, learning = ?, repetitions = ?, lapses = ?, next_review = ?, count = count + 1 WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
                 ease_factor,
                 interval,
+                learning,
+                repetitions,
+                lapses,
                 next_review,
                 session["user_id"],
                 word,
@@ -227,12 +219,15 @@ def add():
                 translation,
             )[0]["id"]
             db.execute(
-                """INSERT INTO user_words (user_id, word_id, next_review)
-                VALUES (?, ?, ?)
+                """INSERT INTO user_words (user_id, word_id, next_review, learning, repetitions, lapses)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT(user_id, word_id) DO NOTHING""",
                 session["user_id"],
                 word_id,
-                now(),
+                next_minutes(1),
+                2,
+                0,
+                0,
             )
         except (TranslationError, sqlite3.Error):
             flash("Could not add that word right now.", "danger")

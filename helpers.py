@@ -1,8 +1,9 @@
 import sqlite3
+from math import ceil
 from flask import redirect, session
 from functools import wraps
 import translators as ts
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 
 RANDOM_WORD_START_COUNT = 50
 
@@ -68,23 +69,120 @@ def translate(word):
 
 
 def now():
-    return date.today().strftime("%Y-%m-%d")
+    return datetime.now().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def next_r(interval):
-    new_date = date.today() + timedelta(days=interval)
-    return new_date.strftime("%Y-%m-%d")
+    new_date = datetime.now() + timedelta(days=interval)
+    return new_date.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def next_minutes(minutes):
+    new_date = datetime.now() + timedelta(minutes=minutes)
+    return new_date.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def start(db, user_id):
     db.execute(
         """
-        INSERT INTO user_words (user_id, next_review, word_id)
-        SELECT ?, ?, id FROM words 
+        INSERT INTO user_words (user_id, next_review, word_id, learning, repetitions, lapses)
+        SELECT ?, ?, id, 2, 0, 0 FROM words 
         ORDER BY RANDOM() 
         LIMIT ?
     """,
         user_id,
-        now(),
+        next_minutes(1),
         RANDOM_WORD_START_COUNT,
     )
+
+
+def schedule_review(ease_factor, interval, learning, repetitions, lapses, quality):
+    next_ease = ease_factor
+    next_interval = interval
+    next_learning = learning
+    next_repetitions = repetitions
+    next_lapses = lapses
+
+    if quality == "forgot":
+        next_ease = max(1.3, round(next_ease - 0.2, 2))
+        next_interval = 1
+        next_learning = 2
+        next_repetitions = 0
+        next_lapses += 1
+        return (
+            next_ease,
+            next_interval,
+            next_learning,
+            next_repetitions,
+            next_lapses,
+            next_minutes(1),
+        )
+
+    if learning == 2:
+        if quality == "hard":
+            next_ease = max(1.3, round(next_ease - 0.05, 2))
+            next_interval = 1
+            next_learning = 2
+            return (
+                next_ease,
+                next_interval,
+                next_learning,
+                next_repetitions + 1,
+                next_lapses,
+                next_minutes(1),
+            )
+
+        next_interval = 10
+        next_learning = 1
+        next_repetitions += 1
+        if quality == "easy":
+            next_ease = round(next_ease + 0.15, 2)
+        return (
+            next_ease,
+            next_interval,
+            next_learning,
+            next_repetitions,
+            next_lapses,
+            next_minutes(10),
+        )
+
+    if learning == 1:
+        if quality == "hard":
+            next_ease = max(1.3, round(next_ease - 0.05, 2))
+            next_interval = 10
+            return (
+                next_ease,
+                next_interval,
+                1,
+                next_repetitions + 1,
+                next_lapses,
+                next_minutes(10),
+            )
+
+        next_interval = 1
+        next_learning = 0
+        next_repetitions += 1
+        if quality == "easy":
+            next_ease = round(next_ease + 0.15, 2)
+        return (
+            next_ease,
+            next_interval,
+            next_learning,
+            next_repetitions,
+            next_lapses,
+            next_r(1),
+        )
+
+    if quality == "hard":
+        next_ease = max(1.3, round(next_ease - 0.15, 2))
+        next_interval = max(1, round(next_interval * 1.2))
+    elif quality == "normal":
+        next_interval = max(1, round(next_interval * next_ease))
+    elif quality == "easy":
+        next_ease = round(next_ease + 0.15, 2)
+        next_interval = max(1, round(next_interval * next_ease * 1.3))
+
+    if next_ease < 1.3:
+        next_ease = 1.3
+    next_repetitions += 1
+    return next_ease, next_interval, 0, next_repetitions, next_lapses, next_r(next_interval)
