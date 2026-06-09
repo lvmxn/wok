@@ -1,64 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="vh-100 overflow-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WOK: {% block title %}{% endblock %}</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-
-    <div>
-        <header >
-            <nav class="navbar navbar-expand-lg">
+<body class="text-white d-flex flex-column vh-100 overflow-hidden position-relative">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-secondary">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/" aria-current="page">
-                    <img src="/static/wok.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
-                    WOK
-                    </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-                </button>
+                <a class="navbar-brand font-mono fw-bold" href="/" aria-current="page">WOK</a>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div class="navbar-nav">
-                    <a class="nav-link" href="/add">Add</a>
-                    <a class="nav-link" href="/tasks">Tasks</a>
-                    <a class="nav-link" href="/my_words">My words</a>
-                </div>
-                <div class="ms-auto d-flex navbar-nav">
-                    {% if not session.get('user_id') %}
-                        <a class="nav-link" href="/register">Register</a>
-                        <a class="nav-link" href="/login">Login</a>
-                    {% else %}
-                        <a class="nav-link" href="/logout">Log out</a>
-                        <a class="nav-link" href="/">{{ username }}</a>
-                    {% endif %}
-                </div>
+                    <div class="navbar-nav">
+                        <a class="nav-link" href="/add">Add</a>
+                        <a class="nav-link" href="/tasks">Tasks</a>
+                        <a class="nav-link" href="/my_words">My words</a>
+                    </div>
+                    <div class="ms-auto d-flex navbar-nav">
+                        {% if not session.get('user_id') %}
+                            <a class="nav-link" href="/register">Register</a>
+                            <a class="nav-link" href="/login">Login</a>
+                        {% else %}
+                            <a class="nav-link" href="/logout">Log out</a>
+                            <a class="nav-link" href="/" class="text-white-50">{{ username }}</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-            </nav>
-        </header>
-    </div>
-
-    <main class="container py-5 text-center">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category in ['error','danger'] else category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </nav>
+    </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="toast-alert px-3">
+        {% for category, message in messages %}
+            <div style="background-color: #1a1a1a" class="alert text-white border border-secondary rounded-3 shadow d-flex align-items-center justify-content-between p-3 mb-2" role="alert">
+                <span class="small font-mono">{{ message }}</span>
+                <button type="button" class="btn-close btn-close-white small ms-2" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75rem;"></button>
             </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+    <main class="container text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center py-2" style="min-height: 0;">
         {% block main %}{% endblock %}
     </main>
-
-    <footer class="text-center text-muted py-3 w-100" style="font-size: 0.95em; left:0; bottom:0; z-index:100;">
-        &copy; 2026 WOK &mdash; Made for CS50<br>
-        Developer: lvmxn &mdash; <a href="mailto:lukanindan@gmail.com" class="text-muted">lukanindan@gmail.com</a>
+    <footer class="py-3 text-center bg-black w-100" style="background-color: #121212 !important;">
+        <span class="small text-white-50 font-mono">
+            &copy; 2026 WOK<br>
+            Developer: lvmxn &mdash; <a href="https://mail.google.com/mail/?view=cm&fs=1&to=lukanindan@gmail.com" target="_blank" class="text-white-50 text-decoration-none">lukanindan@gmail.com</a>
+        </span>
     </footer>
-</body>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
