@@ -5,12 +5,13 @@
 {% endblock %}
 
 {% block main %}
-    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
-        <form action="/add" method="post">
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
+        <h1 class="mb-4">New Entry</h1>
+        <form action="/add" method="post" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
             <div class="mb-3">
                 <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="word" placeholder="Word" type="text">
             </div>
-            <button type="submit">Translate and add to your words</button>
+            <button class="btn btn-mono-outline btn-sm" type="submit">Add</button>
         </form>
         <hr>
         {% if word %}
