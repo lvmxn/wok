@@ -1,16 +1,17 @@
 {% extends "layout.html" %}
 
 {% block title %}
-   Tasks
+    Tasks
 {% endblock %}
 
 {% block main %}
-    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
-        <div class="card" style="width: 18rem;">
-            <div class="card-body">
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
+        <h1 class="mb-4">Select a Task</h1>
+        <div class="card py-2 card-mono mx-auto my-3" style="width: 250px;">
+            <div class="card-body py-2 px-3">
                 <h5 class="card-title">Flashcards</h5>
                 <p class="card-text">Test your memory by recalling the translation. Flip the card to see the answer, then rate how well you remembered it to optimize your learning schedule.</p>
-                <a href="/flashcards" class="btn">Start</a>
+                <a href="/flashcards" class="btn btn-mono-outline btn-normal-case">Start</a>
             </div>
         </div>
 
