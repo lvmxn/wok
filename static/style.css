@@ -1,9 +1,18 @@
 * {
     font-family: 'Inter', sans-serif;
 }
+::selection {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+::-moz-selection {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
 body {
     background-color: #121212 !important;
 }
+/* alerts(from boostrap)*/
 .toast-alert {
     position: absolute;
     top: 75px;
@@ -13,9 +22,33 @@ body {
     width: 100%;
     max-width: 400px;
 }
+
+/* base btn properties */
+.btn-mono-outline {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.85rem;
+    padding: 8px 20px !important;
+    transform: scale(1) !important;
+    transition: transform 0.1s ease-in-out !important;
+}
+
+/* 1. short text (CAPS) */
+.btn-caps {
+    text-transform: uppercase !important;
+    letter-spacing: 1.5px !important;
+}
+
+/* 2. long text (lower) */
+.btn-normal-case {
+    text-transform: none !important;
+    letter-spacing: 0.5px !important;
+    font-weight: 500 !important;
+}
+
 /* 1. Bordered black btn */
 .btn-mono-outline {
-    /* background-color: transparent !important; */
     color: #f8f9fa !important;
     border: 1px solid #495057 !important;
     background-color: #1a1a1a !important;
@@ -41,33 +74,29 @@ body {
     background-color: #ebe9e9 !important;
     transform: scale(0.95) !important;
 }
-/* 2. filed white btn */
-.btn-mono-solid {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border: 1px solid #ffffff !important;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: all 0.2s ease-in-out !important;
-}
-.btn-mono-solid:hover {
-    background-color: #e2e8f0 !important;
-    border-color: #e2e8f0 !important;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
-}
 /* bootstrap fix */
-.btn-mono-outline:focus, .btn-mono-solid:focus, .inp-txt:focus{
+.btn-mono-outline:focus, .inp-txt:focus{
     box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.2) !important;
 }
+/* text input*/
 .inp-txt {
     color: #ffffff !important;
     border: 1px solid #495057 !important;
     background-color: #1a1a1a !important;
     font-weight: 500;
 }
-
+/* fix for chrome autofill */
+.inp-txt:-webkit-autofill,
+.inp-txt:-webkit-autofill:hover, 
+.inp-txt:-webkit-autofill:focus,
+.inp-txt:-webkit-autofill:active {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0px 1000px #1a1a1a inset !important;
+    border: 1px solid #495057 !important;
+}
+/* card(from boostrap) */
 .card-mono {
+    color: #ffffff !important;
     background-color: #1a1a1a !important;
     border: 1px solid #495057 !important;
     border-radius: 8px !important;
@@ -80,4 +109,120 @@ body {
 
 .card-mono .text-muted-mono {
     color: #a0a0a0;
+}
+
+/* fix for header and footer */
+.words-page-container {
+    height: calc(100vh - 70px - 60px) !important; 
+    
+    margin-top: 70px !important; 
+    margin-bottom: 60px !important; 
+    
+    padding-top: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* inner scroll for table */
+.words-table-scroll-area {
+    border: 1px solid var(--my-border-main); 
+    border-radius: 8px; 
+    background-color: var(--my-bg-main);
+    flex-grow: 1; 
+    overflow-y: auto !important; 
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+.words-table-scroll-area thead tr {
+    border-bottom: 2px solid #495057; 
+    position: sticky; 
+    top: 0; 
+    background-color: #1a1a1a; 
+    z-index: 2;
+}
+
+.words-table-scroll-area {
+    --my-bg-main: #1a1a1a;       
+}
+.words-table-scroll-area .table {
+    --bs-table-bg: var(--my-bg-main) !important;
+    background-color: var(--my-bg-main) !important;
+}
+
+.words-table-scroll-area .word-cell, .words-table-scroll-area .translation-cell {
+    color: #ffffff;
+}
+
+.words-table-scroll-area .review-cell, .words-table-scroll-area .count-cell,.words-table-scroll-area .num-cell {
+    color: #888888; 
+    font-size: 0.9rem;
+}
+
+/* table's scrollbar */
+/* 1. width and height */
+.words-table-scroll-area::-webkit-scrollbar {
+    width: 8px;          /* vertical */
+    height: 8px;         /* horizontal (mobile) */
+}
+/* 2. bg */
+.words-table-scroll-area::-webkit-scrollbar-track {
+    background: #1a1a1a; 
+    border-radius: 0 8px 8px 0;
+}
+
+/* 3. slider */
+.words-table-scroll-area::-webkit-scrollbar-thumb {
+    background: #495057;
+    border-radius: 4px;
+}
+
+.words-table-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: #6c757d;
+}
+
+/*fix Bootstrap-hover tr */
+.words-table-scroll-area .table-dark.table-hover tbody tr:hover {
+    --bs-table-hover-bg: #1a1a1a !important;
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* mobile nav bar fix (boostrap) */
+@media (max-width: 991.98px) {
+    /* 1. off Bootstrap roll animation*/
+    .navbar-collapse.collapsing {
+        height: 0 !important;
+        transition: none !important;
+        display: none !important;
+    }
+
+    /* 2. base style */
+    .navbar-collapse.show {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #121212 !important;
+        z-index: 9999 !important;
+        padding: 1rem;
+        border-bottom: 2px solid #495057 !important;
+        border-radius: 0 0 8px 8px;
+        
+        /* Roll Down */
+        overflow: hidden;
+        animation: rollDown 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        transform-origin: top;
+    }
+
+    /* Roll Down animation */
+    @keyframes rollDown {
+        0% {
+            transform: scaleY(0);
+            opacity: 0;
+        }
+        100% {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+    }
 }
