@@ -1,19 +1,19 @@
 {% extends "layout.html" %}
 
 {% block title %}
-   Login
+    Login
 {% endblock %}
 
 {% block main %}
-    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
         <form action="/login" method="post">
             <div class="mb-3">
-                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text">
+                <input autocomplete="off" autofocus class="form-control mx-auto w-auto inp-txt" name="username" placeholder="Username" type="text">
             </div>
             <div class="mb-3">
-                <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password">
+                <input class="form-control mx-auto w-auto inp-txt" name="password" placeholder="Password" type="password">
             </div>
-            <button type="submit">Login</button>
+            <button class="btn-mono-outline btn-normal-case btn btn btn-sm" type="submit">Login</button>
         </form>
     </div>
 {% endblock %}
