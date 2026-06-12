@@ -1,32 +1,35 @@
 {% extends "layout.html" %}
 
 {% block title %}
-   My words
+    My words
 {% endblock %}
 
 {% block main %}
-    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
-        <table class="table">
+<div class="container words-page-container">
+    <h2 class="text-white mb-4 text-start d-flex flex-column align-items-center main-content justify-content-center">Word List</h2>
+    <div class="table-responsive w-100 words-table-scroll-area">
+        <table class="table table-dark table-hover m-0 mono-table">
             <thead>
                 <tr>
-                <th scope="col">#</th>
-                <th scope="col">Word</th>
-                <th scope="col">Translation</th>
-                <th scope="col">Next review</th>
-                <th scope="col">Count</th>
+                    <th scope="col" class="text-secondary">#</th>
+                    <th scope="col">Word</th>
+                    <th scope="col">Translation</th>
+                    <th scope="col">Next review</th>
+                    <th scope="col" class="text-center">Count</th>
                 </tr>
             </thead>
             <tbody>
-                {% for word in words%}
+                {% for word in words %}
                     <tr>
-                    <th scope="row">{{loop.index}}</th>
-                    <td>{{word["word"]}}</td>
-                    <td>{{word["translation"]}}</td>
-                    <td>{{word["next_review"]}}</td>
-                    <td>{{word["count"]}}</td>
+                        <th scope="row" class="num-cell">{{ loop.index }}</th>
+                        <td class="fw-bold word-cell">{{ word["word"] }}</td>
+                        <td class="fw-bold translation-cell">{{ word["translation"] }}</td>
+                        <td class="review-cell">{{ word["next_review"] }}</td>
+                        <td class="count-cell ">{{ word["count"] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
 {% endblock %}
