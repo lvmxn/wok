@@ -9,16 +9,20 @@
         <h1 class="mb-4">New Entry</h1>
         <form action="/add" method="post" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
             <div class="mb-3">
-                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="word" placeholder="Word" type="text">
+                <input autocomplete="off" autofocus class="form-control mx-auto w-auto inp-txt" name="word" placeholder="Word" type="text">
             </div>
             <button class="btn btn-mono-outline btn-sm" type="submit">Add</button>
         </form>
         <hr>
         {% if word %}
-            <div class="card">
-                <div class="card-body">
-                    <h5>pair "{{ word }}" - "{{ translation }}" added to yor words</h5>
-
+            <div class="card card-mono mx-auto my-3">
+                <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between ">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-white-50">Added:</span>
+                        <span class="word-highlight fw-semibold text-white">{{ word }}</span>
+                        <span class="text-white-50">-</span>
+                        <span class="word-highlight">{{ translation }} *</span>
+                    </div>
                 </div>
             </div>
         {% endif %}
