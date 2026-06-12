@@ -1,22 +1,22 @@
 {% extends "layout.html" %}
 
 {% block title %}
-   Flashcards
+    Flashcards
 {% endblock %}
 
 {% block main %}
-    <div class="container min-vh-100 d-flex flex-column align-items-center main-content">
-        <div class="card" style="width: 18rem;">
-            <div class="card-body">
-                <h5 class="card-title" id="flashcard-text"></h5>
-                <a href="#" class="btn" id="toggle-btn">Show translation</a>
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
+        <div class="card card-mono mx-auto my-3" style="width: 18rem;">
+            <div class="card-body py-2 px-3">
+                <h5 style="font-weight: 650" class="card-title py-3" id="flashcard-text"></h5>
+                <a href="#" class="btn btn-mono-outline btn-normal-case" id="toggle-btn">Show translation</a>
             </div>
         </div>
-    <div class="btn-group" role="group" aria-label="Basic example">
-        <button type="button" class="btn btn-primary" onclick="answer('forgot')">Forgot</button>
-        <button type="button" class="btn btn-primary" onclick="answer('hard')">Hard</button>
-        <button type="button" class="btn btn-primary" onclick="answer('normal')">Normal</button>
-        <button type="button" class="btn btn-primary" onclick="answer('easy')">Easy</button>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('forgot')">Forgot</button>
+        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('hard')">Hard</button>
+        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('normal')">Normal</button>
+        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('easy')">Easy</button>
     </div>
     </div>
 
@@ -27,32 +27,28 @@
         let word = '';
         let translation = '';
         let finish = false;
-        if (words.length == 0)
-        {   
-            exit("empty");
-        }
-        else
-        {
-            word = words[num].word;
-            translation = words[num].translation;
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('flashcard-text').textContent = word;
-        });
-
-        document.getElementById('toggle-btn').addEventListener('click', function(e) {
-            if (finish) return;
-            e.preventDefault();
-            const textElem = document.getElementById('flashcard-text');
-            if (showingWord) {
-                textElem.textContent = translation;
-                this.textContent = "Show word";
+            if (words.length === 0) { 
+                exit("empty");
             } else {
-                textElem.textContent = word;
-                this.textContent = "Show translation";
+                word = words[num].word;
+                translation = words[num].translation;
+                document.getElementById('flashcard-text').textContent = word;
             }
-            showingWord = !showingWord;
+
+            document.getElementById('toggle-btn').addEventListener('click', function(e) {
+                if (finish) return;
+                e.preventDefault();
+                const textElem = document.getElementById('flashcard-text');
+                if (showingWord) {
+                    textElem.textContent = translation;
+                    this.textContent = "Show word";
+                } else {
+                    textElem.textContent = word;
+                    this.textContent = "Show translation";
+                }
+                showingWord = !showingWord;
+            });
         });
 
         async function showNextCard() {
@@ -70,14 +66,16 @@
         }
 
         async function answer(quality) {
-            const response = await fetch('/flashcards', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ word: word, quality: quality })
-            });
-        
-            if (response.ok) {
-                showNextCard();
+            const currentWord = word;
+            showNextCard();
+            try {
+                await fetch('/flashcards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: currentWord, quality: quality })
+                });
+            } catch (error) {
+                console.error("Net error:", error);
             }
         }
 
@@ -93,8 +91,9 @@
             }
         }
 
-        async function exit(reason)
+        function exit(reason)
         {
+            finish = true;
             if (reason == 'empty')
             {
                 word = "No cards for this time";
@@ -105,7 +104,6 @@
             }
             document.getElementById('flashcard-text').textContent = word;
             disable();
-            finish = true;
         }
         </script>
 {% endblock %}
