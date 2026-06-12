@@ -38,7 +38,7 @@ body {
     box-shadow: 0 4px 10px rgba(255, 255, 255, 0.15);
 }
 .btn-mono-outline:active {
-    background-color: #ecebeb !important;
+    background-color: #ebe9e9 !important;
     transform: scale(0.95) !important;
 }
 /* 2. filed white btn */
@@ -56,13 +56,28 @@ body {
     border-color: #e2e8f0 !important;
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
 }
-/* bootstrap btn fix */
-.btn-mono-outline:focus, .btn-mono-solid:focus {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+/* bootstrap fix */
+.btn-mono-outline:focus, .btn-mono-solid:focus, .inp-txt:focus{
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.2) !important;
 }
 .inp-txt {
-    color: #f8f9fa !important;
+    color: #ffffff !important;
     border: 1px solid #495057 !important;
     background-color: #1a1a1a !important;
     font-weight: 500;
+}
+
+.card-mono {
+    background-color: #1a1a1a !important;
+    border: 1px solid #495057 !important;
+    border-radius: 8px !important;
+}
+
+.card-mono .word-highlight {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.card-mono .text-muted-mono {
+    color: #a0a0a0;
 }
