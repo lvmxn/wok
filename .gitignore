@@ -14,3 +14,6 @@ venv/
 plan.md
 todo.md
 clean.sql
+additionlstyle.css
+database.db-shm
+database.db-wal
