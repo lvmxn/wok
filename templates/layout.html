@@ -15,6 +15,11 @@
         <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-secondary">
             <div class="container-fluid">
                 <a class="navbar-brand font-mono fw-bold" href="/" aria-current="page">WOK</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <div class="navbar-nav">
                         <a class="nav-link" href="/add">Add</a>
@@ -27,7 +32,7 @@
                             <a class="nav-link" href="/login">Login</a>
                         {% else %}
                             <a class="nav-link" href="/logout">Log out</a>
-                            <a class="nav-link" href="/" class="text-white-50">{{ username }}</a>
+                            <a class="nav-link text-white-50" href="/">{{ username }}</a>
                         {% endif %}
                     </div>
                 </div>
