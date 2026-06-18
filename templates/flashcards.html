@@ -25,6 +25,7 @@
         let num = 0;
         let showingWord = true;
         let word = '';
+        let id = null;
         let translation = '';
         let finish = false;
         document.addEventListener('DOMContentLoaded', function() {
@@ -33,6 +34,7 @@
             } else {
                 word = words[num].word;
                 translation = words[num].translation;
+                id = words[num].id;
                 document.getElementById('flashcard-text').textContent = word;
             }
 
@@ -60,19 +62,20 @@
             }
             word = words[num].word;
             translation = words[num].translation;
+            id = words[num].id;
             document.getElementById('toggle-btn').textContent = "Show translation";
             showingWord = true;
             document.getElementById('flashcard-text').textContent = word;
         }
 
         async function answer(quality) {
-            const currentWord = word;
+            const currentid = id;
             showNextCard();
             try {
                 await fetch('/flashcards', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ word: currentWord, quality: quality })
+                    body: JSON.stringify({ id : currentid, quality: quality })
                 });
             } catch (error) {
                 console.error("Net error:", error);

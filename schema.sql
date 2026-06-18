@@ -6,9 +6,10 @@ CREATE TABLE users (
 
 CREATE TABLE words (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    word TEXT NOT NULL UNIQUE,
+    word TEXT NOT NULL,
     translation TEXT NOT NULL,
-    definition TEXT
+    context TEXT,
+    UNIQUE(word, translation)
 );
 
 CREATE TABLE user_words (
@@ -22,6 +23,7 @@ CREATE TABLE user_words (
     learning INTEGER DEFAULT 2,
     repetitions INTEGER DEFAULT 0,
     lapses INTEGER DEFAULT 0,
+    context TEXT,
     UNIQUE(user_id, word_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE

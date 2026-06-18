@@ -29,7 +29,6 @@ app = Flask(__name__)
 db = Database("database.db")
 app.secret_key = os.environ.get("SECRET_KEY", "123")
 
-
 @app.errorhandler(404)
 def not_found(error):
     return render_template("error.html", error_code=404, error_message="Not found"), 404
@@ -47,6 +46,11 @@ def server_error(error):
 def index():
     return render_template("index.html")
 
+@app.route("/api", methods=["POST"])
+def api():
+    data = request.get_json()
+    print(data)
+    return jsonify({"status": "success"}), 200
 
 @app.context_processor
 def inject_user():
@@ -117,7 +121,7 @@ def login():
         if not user_rows or not check_password_hash(
             user_rows[0]["password_hash"], password
         ):
-            flash("Passwords do not match.", "danger")
+            flash("Invalid username and/or password.", "danger")
             return redirect(url_for("login"))
         session["user_id"] = user_rows[0]["id"]
         return redirect(url_for("index"))
@@ -142,13 +146,13 @@ def flashcards():
         data_j = request.get_json()
         if not isinstance(data_j, dict):
             return jsonify({"status": "error", "message": "Invalid request body"}), 400
-        word = data_j.get("word")
+        id = data_j.get("id")
         quality = data_j.get("quality")
         try:
             data_db = db.execute(
-                "SELECT ease_factor, interval, learning, repetitions, lapses FROM user_words WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+                "SELECT ease_factor, interval, learning, repetitions, lapses FROM user_words WHERE user_id = ? AND word_id = ?",
                 session["user_id"],
-                word,
+                id,
             )
         except sqlite3.Error:
             return (
@@ -169,7 +173,7 @@ def flashcards():
 
         try:
             db.execute(
-                "UPDATE user_words SET ease_factor = ?, interval = ?, learning = ?, repetitions = ?, lapses = ?, next_review = ?, count = count + 1 WHERE user_id = ? AND word_id in (SELECT id FROM words WHERE word = ?)",
+                "UPDATE user_words SET ease_factor = ?, interval = ?, learning = ?, repetitions = ?, lapses = ?, next_review = ?, count = count + 1 WHERE user_id = ? AND word_id = ?",
                 ease_factor,
                 interval,
                 learning,
@@ -177,7 +181,7 @@ def flashcards():
                 lapses,
                 next_review,
                 session["user_id"],
-                word,
+                id,
             )
         except sqlite3.Error:
             return jsonify({"status": "error", "message": "Could not save review"}), 500
@@ -186,13 +190,14 @@ def flashcards():
         """SELECT 
             w.id, 
             w.word, 
-            w.translation 
+            w.translation,
+            COALESCE(uw.context, w.context) AS context
             FROM words w
             JOIN user_words uw ON w.id = uw.word_id
             WHERE uw.user_id = ? 
             AND uw.next_review <= ?
             ORDER BY uw.next_review ASC
-            LIMIT 50""",
+            LIMIT 20""",
         session["user_id"],
         now(),
     )
@@ -204,27 +209,41 @@ def flashcards():
 def add():
     if request.method == "POST":
         word = request.form.get("word")
+        translation = request.form.get("translation")
+        context = request.form.get("context")
         if not word:
             flash("All fields are required.", "danger")
             return redirect(url_for("add"))
         w = word.strip().lower()
         try:
-            translation = translate(w)
+            if not translation:
+                translation = translate(w)
+            if not context:  
+                context = None
             word_id = db.execute(
-                """INSERT INTO words (word, translation)
-                VALUES (?, ?)
-                ON CONFLICT(word) DO UPDATE SET word = words.word
-                RETURNING id""",
-                w,
-                translation,
+                """
+                INSERT INTO words (word, translation, context)
+                VALUES (?, ?, ?)
+                ON CONFLICT(word, translation) DO UPDATE SET 
+                    context = COALESCE(words.context, EXCLUDED.context)
+                RETURNING id
+                """,
+                w, translation, context,
             )[0]["id"]
             db.execute(
-                """INSERT INTO user_words (user_id, word_id, next_review, learning, repetitions, lapses)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(user_id, word_id) DO NOTHING""",
+                """
+                INSERT INTO user_words (user_id, word_id, context, next_review, learning, repetitions, lapses)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(user_id, word_id) DO UPDATE SET
+                    context = CASE 
+                        WHEN EXCLUDED.context IS NOT NULL THEN EXCLUDED.context 
+                        ELSE user_words.context 
+                    END
+                """,
                 session["user_id"],
                 word_id,
-                next_minutes(1),
+                context,
+                now(),
                 2,
                 0,
                 0,
