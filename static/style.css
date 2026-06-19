@@ -94,7 +94,7 @@ body {
     -webkit-box-shadow: 0 0 0px 1000px #1a1a1a inset !important;
     border: 1px solid #495057 !important;
 }
-/* card(from boostrap) */
+/* --card(from boostrap)-- */
 .card-mono {
     color: #ffffff !important;
     background-color: #1a1a1a !important;
@@ -124,7 +124,7 @@ body {
     flex-direction: column;
 }
 
-/* inner scroll for table */
+/* --inner scroll for table--*/
 .words-table-scroll-area {
     border: 1px solid var(--my-border-main); 
     border-radius: 8px; 
@@ -159,24 +159,25 @@ body {
     font-size: 0.9rem;
 }
 
-/* table's scrollbar */
-/* 1. width and height */
+/* --table's scrollbar-- */
+/* width and height */
 .words-table-scroll-area::-webkit-scrollbar {
     width: 8px;          /* vertical */
     height: 8px;         /* horizontal (mobile) */
 }
-/* 2. bg */
+/* bg */
 .words-table-scroll-area::-webkit-scrollbar-track {
     background: #1a1a1a; 
     border-radius: 0 8px 8px 0;
 }
 
-/* 3. slider */
+/* slider */
 .words-table-scroll-area::-webkit-scrollbar-thumb {
     background: #495057;
     border-radius: 4px;
 }
 
+/* scroll-area hover*/
 .words-table-scroll-area::-webkit-scrollbar-thumb:hover {
     background: #6c757d;
 }
@@ -187,16 +188,16 @@ body {
     transition: background-color 0.15s ease-in-out;
 }
 
-/* mobile nav bar fix (boostrap) */
+/* --mobile nav bar fix (boostrap)-- */
 @media (max-width: 991.98px) {
-    /* 1. off Bootstrap roll animation*/
+    /* off Bootstrap roll animation*/
     .navbar-collapse.collapsing {
         height: 0 !important;
         transition: none !important;
         display: none !important;
     }
 
-    /* 2. base style */
+    /* base style */
     .navbar-collapse.show {
         position: absolute;
         top: 100%;
@@ -225,4 +226,62 @@ body {
             opacity: 1;
         }
     }
+}
+
+
+/* --Custom checkbox-- */
+
+.custom-checkbox {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    font-family: sans-serif;
+}
+
+/* hide defaut */
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* custom square */
+.checkmark {
+    position: relative;
+    height: 20px;
+    width: 20px;
+    background-color: #1a1a1a;
+    border: 2px solid #495057; 
+    border-radius: 4px; 
+    margin-right: 10px;
+    transition: all 0.2s ease;
+}
+
+/* if checked then change bg*/
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: #ffffff;
+    border-color: #495057;
+}
+
+/* check mark */
+.checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+    
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid #1a1a1a;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* show check mark only when checked */
+.custom-checkbox input:checked ~ .checkmark::after {
+    display: block;
 }

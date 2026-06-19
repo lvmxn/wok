@@ -85,6 +85,7 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
+        starter = request.form.get("starter") == 'true'
         if not username or not password or not confirmation:
             flash("All fields are required.", "danger")
             return redirect(url_for("register"))
@@ -107,7 +108,8 @@ def register():
             session["user_id"] = db.execute(
                 "SELECT id FROM users WHERE username = ?", username
             )[0]["id"]
-            start(db, session["user_id"])
+            if starter:
+                start(db, session["user_id"])
         except sqlite3.Error:
             flash("Could not create your account right now.", "danger")
             return redirect(url_for("register"))
