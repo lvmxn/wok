@@ -20,7 +20,10 @@ from flask import (
     session,
     jsonify,
     flash,
+    send_file,
 )
+import io
+from gtts import gTTS
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -44,7 +47,20 @@ def server_error(error):
 def index():
     return render_template("index.html")
 
-@app.route("/api", methods=["POST"])
+
+@app.route('/api/tts')
+def get_tts():
+    text = request.args.get('word', '')
+    if not text:
+        return "Missing word", 400
+    tts = gTTS(text=text, lang='en')
+    fp = io.BytesIO()
+    tts.write_to_fp(fp)
+    fp.seek(0)
+    return send_file(fp, mimetype='audio/mp3')
+
+
+@app.route("/api/hover", methods=["POST"])
 def api():
     data = request.get_json()
     print(data)

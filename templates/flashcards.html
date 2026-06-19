@@ -31,14 +31,22 @@
         let id = null;
         let translation = '';
         let finish = false;
+        let currentAudio = null;
+        let nextAudio = null;
         document.addEventListener('DOMContentLoaded', function() {
             if (words.length === 0) { 
                 exit("empty");
-            } else {
+            } 
+            else {
                 word = words[num].word;
                 translation = words[num].translation;
                 id = words[num].id;
                 document.getElementById('flashcard-text').textContent = word;
+            
+                currentAudio = preloadAudio(word);
+                if (words.length > 1) {
+                    nextAudio = preloadAudio(words[1].word);
+                }
             }
 
             document.getElementById('toggle-btn').addEventListener('click', function(e) {
@@ -69,6 +77,14 @@
             document.getElementById('toggle-btn').textContent = "Show translation";
             showingWord = true;
             document.getElementById('flashcard-text').textContent = word;
+            if (currentAudio) currentAudio.pause();
+            currentAudio = nextAudio;
+            if (num + 1 < words.length) {
+                nextAudio = preloadAudio(words[num + 1].word);
+            } 
+            else {
+                nextAudio = null;
+            }
         }
 
         async function answer(quality) {
@@ -115,21 +131,19 @@
             disable();
         }
 
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US'; 
-                utterance.rate = 0.7; 
-                window.speechSynthesis.cancel();
-                window.speechSynthesis.speak(utterance);
-            } else {
-                console.error("browser does not support TTS");
-            }
+        function preloadAudio(text) {
+            if (!text) return null;
+            const url = `/api/tts?word=${encodeURIComponent(text)}`;
+            const audio = new Audio(url);
+            audio.playbackRate = 1;
+            audio.load();
+            return audio;
         }
 
         function speakCurrentWord() {
-            if (word) {
-                speak(word);
+            if (currentAudio) {
+                currentAudio.currentTime = 0;
+                currentAudio.play().catch(err => console.error("TTS Replay error:", err));
             }
         }
         </script>
