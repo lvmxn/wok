@@ -7,9 +7,11 @@
 {% block main %}
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
         <div class="card card-mono mx-auto my-3" style="width: 18rem;">
-            <div class="card-body py-2 px-3 text-center"> <div id="flashcard-text-wrapper" style="cursor: pointer;" onclick="speakCurrentWord()">
+            <div class="card-body py-2 px-3 text-center"> 
+                <div id="flashcard-text-wrapper" style="cursor: pointer;" onclick="speakCurrentWord()">
                     <h5 style="font-weight: 650; margin-bottom: 0;" class="card-title py-3" id="flashcard-text"></h5>
                 </div>
+                <p id="context"></p>
                 <div class="mt-2">
                     <a href="#" class="btn btn-mono-outline btn-normal-case" id="toggle-btn">Show translation</a>
                 </div>
@@ -29,6 +31,7 @@
         let showingWord = true;
         let word = '';
         let id = null;
+        let context = null;
         let translation = '';
         let finish = false;
         let currentAudio = null;
@@ -41,7 +44,14 @@
                 word = words[num].word;
                 translation = words[num].translation;
                 id = words[num].id;
+                if (words[num].context) {
+                    context = words[num].context
+                }
+                else{
+                    context = null;
+                }
                 document.getElementById('flashcard-text').textContent = word;
+                document.getElementById('context').textContent = context;
             
                 currentAudio = preloadAudio(word);
                 if (words.length > 1) {
@@ -74,9 +84,16 @@
             word = words[num].word;
             translation = words[num].translation;
             id = words[num].id;
+            if (words[num].context) {
+                context = words[num].context
+            }
+            else{
+                context = null;
+            }
             document.getElementById('toggle-btn').textContent = "Show translation";
             showingWord = true;
             document.getElementById('flashcard-text').textContent = word;
+            document.getElementById('context').textContent = context;
             if (currentAudio) currentAudio.pause();
             currentAudio = nextAudio;
             if (num + 1 < words.length) {
@@ -89,7 +106,7 @@
 
         async function answer(quality) {
             if (quality == "forgot"){
-                words.push({word : word, translation : translation, id : id});
+                words.push({word : word, translation : translation, id : id, context : context});
             }
             const currentid = id;
             showNextCard();
@@ -128,6 +145,7 @@
                 word = "Task finished";
             }
             document.getElementById('flashcard-text').textContent = word;
+            document.getElementById('context').textContent = '';
             disable();
         }
 

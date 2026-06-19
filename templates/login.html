@@ -6,14 +6,19 @@
 
 {% block main %}
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
-        <form action="/login" method="post">
+        <h1 class="mb-3">Login</h1>
+        <form class="mb-5" action="/login" method="post">
             <div class="mb-3">
                 <input autocomplete="off" autofocus class="form-control mx-auto w-auto inp-txt" name="username" placeholder="Username" type="text">
             </div>
             <div class="mb-3">
-                <input class="form-control mx-auto w-auto inp-txt" name="password" placeholder="Password" type="password">
+                <input class="form-control mx-auto w-auto inp-txt" name="password" placehoRder="Password" type="password">
             </div>
             <button class="btn-mono-outline btn-normal-case btn btn btn-sm" type="submit">Login</button>
         </form>
+        <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+            <p>New to WOK?</p>
+            <a href="/register" style="color: #ffff;  text-decoration: none; font-weight: 500;">Register</a>
+        </div>
     </div>
 {% endblock %}
