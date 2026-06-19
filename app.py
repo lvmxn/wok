@@ -8,9 +8,7 @@ from helpers import (
     login_required,
     translate,
     start,
-    now,
-    next_minutes,
-    next_r,
+    calculate_next_review,
     schedule_review,
 )
 from flask import (
@@ -199,7 +197,7 @@ def flashcards():
             ORDER BY uw.next_review ASC
             LIMIT 20""",
         session["user_id"],
-        now(),
+        calculate_next_review(0),
     )
     return render_template("flashcards.html", words=dumps(words))
 
@@ -243,7 +241,7 @@ def add():
                 session["user_id"],
                 word_id,
                 context,
-                now(),
+                calculate_next_review(0),
                 2,
                 0,
                 0,

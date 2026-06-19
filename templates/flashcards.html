@@ -69,6 +69,9 @@
         }
 
         async function answer(quality) {
+            if (quality == "forgot"){
+                words.push({word : word, translation : translation, id : id});
+            }
             const currentid = id;
             showNextCard();
             try {

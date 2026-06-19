@@ -17,7 +17,7 @@ CREATE TABLE user_words (
     user_id INTEGER NOT NULL,
     word_id INTEGER NOT NULL,
     ease_factor REAL DEFAULT 2.5,
-    interval INTEGER DEFAULT 1,
+    interval INTEGER DEFAULT 0,
     next_review TEXT,
     count INTEGER DEFAULT 0,
     learning INTEGER DEFAULT 2,
