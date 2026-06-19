@@ -233,7 +233,9 @@ def add():
         w = word.strip().lower()
         try:
             if not translation:
-                translation = translate(w)
+                q = translate(w)
+                w = q[0]
+                translation = q[1]
             if not context:  
                 context = None
             word_id = db.execute(

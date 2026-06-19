@@ -60,7 +60,10 @@ def translate(word):
             result = ts.translate_text(
                 word, translator=i, from_language=f_lang, to_language=t_lang
             )
-            return result
+            if f_lang == "ru":
+                return [result,word]
+            else:
+                return [word,result]
         except Exception as error:
             last_error = error
 
