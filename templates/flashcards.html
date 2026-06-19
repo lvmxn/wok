@@ -7,17 +7,20 @@
 {% block main %}
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
         <div class="card card-mono mx-auto my-3" style="width: 18rem;">
-            <div class="card-body py-2 px-3">
-                <h5 style="font-weight: 650" class="card-title py-3" id="flashcard-text"></h5>
-                <a href="#" class="btn btn-mono-outline btn-normal-case" id="toggle-btn">Show translation</a>
+            <div class="card-body py-2 px-3 text-center"> <div id="flashcard-text-wrapper" style="cursor: pointer;" onclick="speakCurrentWord()">
+                    <h5 style="font-weight: 650; margin-bottom: 0;" class="card-title py-3" id="flashcard-text"></h5>
+                </div>
+                <div class="mt-2">
+                    <a href="#" class="btn btn-mono-outline btn-normal-case" id="toggle-btn">Show translation</a>
+                </div>
             </div>
         </div>
-    <div class="btn-group" role="group">
-        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('forgot')">Forgot</button>
-        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('hard')">Hard</button>
-        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('normal')">Normal</button>
-        <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('easy')">Easy</button>
-    </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('forgot')">Forgot</button>
+            <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('hard')">Hard</button>
+            <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('normal')">Normal</button>
+            <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" onclick="answer('easy')">Easy</button>
+        </div>
     </div>
 
     <script>
@@ -110,6 +113,24 @@
             }
             document.getElementById('flashcard-text').textContent = word;
             disable();
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US'; 
+                utterance.rate = 0.7; 
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.error("browser does not support TTS");
+            }
+        }
+
+        function speakCurrentWord() {
+            if (word) {
+                speak(word);
+            }
         }
         </script>
 {% endblock %}
