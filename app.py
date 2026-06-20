@@ -158,7 +158,11 @@ def tasks():
 @app.route("/flashcards", methods=["GET", "POST"])
 @login_required
 def flashcards():
+    free = request.args.get('mode') == "free"
+
     if request.method == "POST":
+        if free:
+            return jsonify({"status": "success", "message": "Free mode: review not saved"}), 200
         data_j = request.get_json()
         if not isinstance(data_j, dict):
             return jsonify({"status": "error", "message": "Invalid request body"}), 400
@@ -202,21 +206,36 @@ def flashcards():
         except sqlite3.Error:
             return jsonify({"status": "error", "message": "Could not save review"}), 500
         return jsonify({"status": "success"}), 200
-    words = db.execute(
-        """SELECT 
-            w.id, 
-            w.word, 
-            w.translation,
-            COALESCE(uw.context, w.context) AS context
-            FROM words w
-            JOIN user_words uw ON w.id = uw.word_id
-            WHERE uw.user_id = ? 
-            AND uw.next_review <= ?
-            ORDER BY uw.next_review ASC
-            LIMIT 20""",
-        session["user_id"],
-        calculate_next_review(0),
-    )
+    if not free:
+        words = db.execute(
+            """SELECT 
+                w.id, 
+                w.word, 
+                w.translation,
+                COALESCE(uw.context, w.context) AS context
+                FROM words w
+                JOIN user_words uw ON w.id = uw.word_id
+                WHERE uw.user_id = ? 
+                AND uw.next_review <= ?
+                ORDER BY uw.next_review ASC
+                LIMIT 20""",
+            session["user_id"],
+            calculate_next_review(0),
+        )
+    else:
+        words = db.execute(
+            """SELECT 
+                w.id, 
+                w.word, 
+                w.translation,
+                COALESCE(uw.context, w.context) AS context
+                FROM words w
+                JOIN user_words uw ON w.id = uw.word_id
+                WHERE uw.user_id = ? 
+                ORDER BY RANDOM()
+                LIMIT 20""",
+            session["user_id"],
+        )
     return render_template("flashcards.html", words=dumps(words))
 
 
