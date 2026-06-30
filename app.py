@@ -247,7 +247,7 @@ def add():
         translation = request.form.get("translation")
         context = request.form.get("context")
         if not word:
-            flash("All fields are required.", "danger")
+            flash("Word field is required.", "danger")
             return redirect(url_for("add"))
         w = word.strip().lower()
         try:
@@ -292,12 +292,30 @@ def add():
     return render_template("add.html")
 
 
-@app.route("/my_words")
+@app.route("/my_words", methods=["GET", "POST"])
 @login_required
 def my_words():
+    if request.method == "POST":
+        data_j = request.get_json()
+        if not isinstance(data_j, dict):
+            return jsonify({"status": "error", "message": "Invalid request body"}), 400
+        id = data_j.get("id")
+        try:
+            data_db = db.execute(
+                "DELETE FROM user_words WHERE user_id = ? AND word_id = ?",
+                session["user_id"],
+                id,
+            )
+        except sqlite3.Error:
+            return (
+                jsonify({"status": "error", "message": "Could not delete word"}),
+                500,
+            )
+        return jsonify({"status": "success", "message": "Word deleted successfully"}), 200
     words = db.execute(
         """SELECT 
-        w.word, 
+        w.word,
+        w.id,
         w.translation, 
         uw.next_review,
         uw.count               

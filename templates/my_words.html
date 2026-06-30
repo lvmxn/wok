@@ -7,6 +7,11 @@
 {% block main %}
 <div class="container words-page-container">
     <h2 class="text-white mb-4 text-start d-flex flex-column align-items-center main-content justify-content-center">Word List</h2>
+    
+    <div class="mb-4 w-100">
+        <input type="text" id="searchInput" class="form-control inp-txt text-white border-secondary" placeholder="Search">
+    </div>
+
     <div class="table-responsive w-100 words-table-scroll-area">
         <table class="table table-dark table-hover m-0 mono-table">
             <thead>
@@ -16,20 +21,76 @@
                     <th scope="col">Translation</th>
                     <th scope="col">Next review</th>
                     <th scope="col" class="text-center">Count</th>
-                </tr>
+                    <th scope="col" class="text-center">Edit</th> </tr>
             </thead>
-            <tbody>
+            <tbody id="wordsTableBody">
                 {% for word in words %}
-                    <tr>
+                    <tr id="row-{{ word['id'] }}">
                         <th scope="row" class="num-cell">{{ loop.index }}</th>
                         <td class="fw-bold word-cell">{{ word["word"] }}</td>
-                        <td class="fw-bold translation-cell">{{ word["translation"] }}</td>
+                        
+                        <td class="fw-bold translation-cell editable-translation" data-id="{{ word['id'] }}">
+                            <span class="translation-text">{{ word["translation"] }}</span>
+                        </td>
+                        
                         <td class="review-cell">{{ word["next_review"] }}</td>
-                        <td class="count-cell ">{{ word["count"] }}</td>
+                        <td class="count-cell">{{ word["count"] }}</td>
+                        
+                        <td class="text-center">
+                            <button class="btn-delete-cross" onclick="deleteWord('{{ word['id'] }}')"></button>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+    document.getElementById('searchInput').addEventListener('input', function() {
+        let filter = this.value.toLowerCase().trim();
+        let rows = document.querySelectorAll('#wordsTableBody tr');
+
+        rows.forEach(row => {
+            let word = row.querySelector('.word-cell').innerText.toLowerCase();
+            let translation = row.querySelector('.translation-text').innerText.toLowerCase();
+            
+            if (word.includes(filter) || translation.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    function deleteWord(id) {
+        if (confirm("Delete this word")) {
+            fetch('/my_words', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    let row = document.getElementById(`row-${id}`);
+                    if (row) {
+                        row.remove();
+                        recalculateRowNumbers();
+                    }
+                } else {
+                    alert('Delete Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Conection error'));
+        }
+    }
+
+    function recalculateRowNumbers() {
+        let numCells = document.querySelectorAll('#wordsTableBody .num-cell');
+        numCells.forEach((cell, index) => {
+            cell.innerText = index + 1;
+        });
+    }
+</script>
 {% endblock %}

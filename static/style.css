@@ -85,6 +85,14 @@ body {
     background-color: #1a1a1a !important;
     font-weight: 500;
 }
+
+.form-control::placeholder {
+    color: #b9b9b9;
+    opacity: 1;
+    font-style: italic;
+    font-weight: 300;
+}
+
 /* fix for chrome autofill */
 .inp-txt:-webkit-autofill,
 .inp-txt:-webkit-autofill:hover, 
@@ -284,4 +292,35 @@ body {
 /* show check mark only when checked */
 .custom-checkbox input:checked ~ .checkmark::after {
     display: block;
+}
+
+/* --Delete button with cross icon-- */
+.btn-delete-cross {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+/* draw cross */
+.btn-delete-cross::before,
+.btn-delete-cross::after {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 3px;
+  width: 18px;
+  height: 1.5px;
+  background-color: #ffffff;
+}
+
+.btn-delete-cross::before { transform: rotate(45deg); }
+.btn-delete-cross::after { transform: rotate(-45deg); }
+
+.btn-delete-cross:hover {
+  opacity: 1;
 }
