@@ -26,10 +26,10 @@ from gtts import gTTS
 from werkzeug.security import check_password_hash, generate_password_hash
 import secrets
 
-
 app = Flask(__name__)
 db = Database("database.db")
 app.secret_key = os.environ.get("SECRET_KEY", "123")
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -54,22 +54,26 @@ def profile():
             return redirect(url_for("profile"))
         session["mode"] = mode
         return redirect(url_for("index"))
-    return render_template("profile.html", token=session.get("token"), mode=session.get("mode"))
+    return render_template(
+        "profile.html", token=session.get("token"), mode=session.get("mode")
+    )
+
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route('/api/tts')
+
+@app.route("/api/tts")
 def get_tts():
-    text = request.args.get('word', '')
+    text = request.args.get("word", "")
     if not text:
         return "Missing word", 400
-    tts = gTTS(text=text, lang='en')
+    tts = gTTS(text=text, lang="en")
     fp = io.BytesIO()
     tts.write_to_fp(fp)
     fp.seek(0)
-    return send_file(fp, mimetype='audio/mp3')
+    return send_file(fp, mimetype="audio/mp3")
 
 
 @app.route("/api/capture_word", methods=["POST"])
@@ -94,13 +98,16 @@ def capture_word():
             token,
         )
     except sqlite3.Error:
-        return jsonify({"status": "error", "message": "Api is temporarily unavailable"}), 500
+        return (
+            jsonify({"status": "error", "message": "Api is temporarily unavailable"}),
+            500,
+        )
     if not user_rows:
         return jsonify({"status": "error", "message": "Invalid token"}), 401
     id = user_rows[0]["id"]
     w = word.strip().lower()
     try:
-        q = translate(w,session.get("mode"))
+        q = translate(w, session.get("mode"))
     except TranslationError:
         return jsonify({"status": "error", "message": "Could not translate word"}), 422
     w = q[0]
@@ -114,7 +121,8 @@ def capture_word():
                 translation = excluded.translation
             RETURNING id
             """,
-            w, translation,
+            w,
+            translation,
         )[0]["id"]
         db.execute(
             """
@@ -136,8 +144,9 @@ def capture_word():
         )
     except (TranslationError, sqlite3.Error):
         return jsonify({"status": "error", "message": "Failed to save word"}), 500
-        
+
     return jsonify({"status": "success", "word": w, "translation": translation}), 200
+
 
 @app.context_processor
 def inject_user():
@@ -158,7 +167,7 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
-        starter = request.form.get("starter") == 'true'
+        starter = request.form.get("starter") == "true"
         token = secrets.token_urlsafe(32)
         if not username or not password or not confirmation:
             flash("All fields are required.", "danger")
@@ -234,14 +243,20 @@ def logout():
 def tasks():
     return render_template("tasks.html")
 
+
 @app.route("/flashcards", methods=["GET", "POST"])
 @login_required
 def flashcards():
-    free = request.args.get('mode') == "free"
+    free = request.args.get("mode") == "free"
 
     if request.method == "POST":
         if free:
-            return jsonify({"status": "success", "message": "Free mode: review not saved"}), 200
+            return (
+                jsonify(
+                    {"status": "success", "message": "Free mode: review not saved"}
+                ),
+                200,
+            )
         data_j = request.get_json()
         if not isinstance(data_j, dict):
             return jsonify({"status": "error", "message": "Invalid request body"}), 400
@@ -261,13 +276,15 @@ def flashcards():
         if not data_db:
             return jsonify({"status": "error", "message": "Word not found"}), 404
 
-        ease_factor, interval, learning, repetitions, lapses, next_review = schedule_review(
-            data_db[0]["ease_factor"],
-            data_db[0]["interval"],
-            data_db[0]["learning"],
-            data_db[0]["repetitions"],
-            data_db[0]["lapses"],
-            quality
+        ease_factor, interval, learning, repetitions, lapses, next_review = (
+            schedule_review(
+                data_db[0]["ease_factor"],
+                data_db[0]["interval"],
+                data_db[0]["learning"],
+                data_db[0]["repetitions"],
+                data_db[0]["lapses"],
+                quality,
+            )
         )
 
         try:
@@ -338,7 +355,7 @@ def add():
                 q = translate(w, session["mode"])
                 w = q[0]
                 translation = q[1]
-            if not context:  
+            if not context:
                 context = None
             word_id = db.execute(
                 """
@@ -348,7 +365,9 @@ def add():
                     translation = excluded.translation
                 RETURNING id
                 """,
-                w, translation, session["mode"],
+                w,
+                translation,
+                session["mode"],
             )[0]["id"]
             db.execute(
                 """
@@ -394,7 +413,10 @@ def my_words():
                 jsonify({"status": "error", "message": "Could not delete word"}),
                 500,
             )
-        return jsonify({"status": "success", "message": "Word deleted successfully"}), 200
+        return (
+            jsonify({"status": "success", "message": "Word deleted successfully"}),
+            200,
+        )
     words = db.execute(
         """SELECT 
         w.word,
@@ -414,4 +436,4 @@ def my_words():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
