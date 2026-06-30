@@ -1,14 +1,14 @@
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL
+    password_hash TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE words (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     word TEXT NOT NULL,
     translation TEXT NOT NULL,
-    context TEXT,
     UNIQUE(word, translation)
 );
 

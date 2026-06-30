@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block main %}
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
+        <h1 class="mb-3">Profile</h1>
+        <div class="d-flex align-items-center gap-3 w-100 mb-4" style="max-width: 400px;">
+            <h5 class="mb-0 flex-shrink-0">Token</h5>
+            <input id="token-input" type="text" class="form-control inp-txt" value="{{ token }}" readonly spellcheck="false">
+            <button type="button" class="btn btn-mono-outline btn-normal-case flex-shrink-0" id="copy-token-btn">Copy</button>
+        </div>
+        <script>
+            const tokenInput = document.getElementById('token-input');
+            const copyTokenBtn = document.getElementById('copy-token-btn');
+
+            copyTokenBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(tokenInput.value);
+                    copyTokenBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyTokenBtn.textContent = 'Copy';
+                    }, 1200);
+                } catch (error) {
+                    console.error('Copy failed:', error);
+                }
+            });
+        </script>
+    </div>
+{% endblock %}

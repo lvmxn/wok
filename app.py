@@ -25,6 +25,8 @@ from flask import (
 import io
 from gtts import gTTS
 from werkzeug.security import check_password_hash, generate_password_hash
+import secrets
+
 
 app = Flask(__name__)
 db = Database("database.db")
@@ -43,10 +45,14 @@ def server_error(error):
     )
 
 
+@app.route("/profile")
+@login_required
+def profile():
+    return render_template("profile.html", token=session.get("token"))
+
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route('/api/tts')
 def get_tts():
@@ -60,11 +66,72 @@ def get_tts():
     return send_file(fp, mimetype='audio/mp3')
 
 
-@app.route("/api/hover", methods=["POST"])
-def api():
+@app.route("/api/capture_word", methods=["POST"])
+def capture_word():
     data = request.get_json()
-    print(data)
-    return jsonify({"status": "success"}), 200
+    if not isinstance(data, dict):
+        return jsonify({"status": "error", "message": "Invalid request body"}), 400
+    token = data.get("token")
+    word = data.get("word")
+    context = data.get("context")
+    if not token:
+        return jsonify({"status": "error", "message": "Missing token"}), 400
+    if not word:
+        return jsonify({"status": "error", "message": "Missing word"}), 400
+    if isinstance(context, str):
+        context = context.strip()
+    if not context:
+        context = None
+    try:
+        user_rows = db.execute(
+            "SELECT id FROM users WHERE token = ?",
+            token,
+        )
+    except sqlite3.Error:
+        return jsonify({"status": "error", "message": "Api is temporarily unavailable"}), 500
+    if not user_rows:
+        return jsonify({"status": "error", "message": "Invalid token"}), 401
+    id = user_rows[0]["id"]
+    w = word.strip().lower()
+    try:
+        q = translate(w)
+    except TranslationError:
+        return jsonify({"status": "error", "message": "Could not translate word"}), 422
+    w = q[0]
+    translation = q[1]
+    try:
+        word_id = db.execute(
+            """
+            INSERT INTO words (word, translation)
+            VALUES (?, ?)
+            ON CONFLICT(word, translation) DO UPDATE SET
+                translation = excluded.translation
+            RETURNING id
+            """,
+            w, translation,
+        )[0]["id"]
+        db.execute(
+            """
+            INSERT INTO user_words (user_id, word_id, context, next_review, learning, repetitions, lapses)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, word_id) DO UPDATE SET
+                context = CASE 
+                    WHEN EXCLUDED.context IS NOT NULL THEN EXCLUDED.context 
+                    ELSE user_words.context 
+                END
+            """,
+            id,
+            word_id,
+            context,
+            calculate_next_review(0),
+            2,
+            0,
+            0,
+        )
+    except (TranslationError, sqlite3.Error):
+        return jsonify({"status": "error", "message": "Failed to save word"}), 500
+        
+    return jsonify({"status": "success", "word": w, "translation": translation}), 200
 
 @app.context_processor
 def inject_user():
@@ -86,6 +153,7 @@ def register():
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
         starter = request.form.get("starter") == 'true'
+        token = secrets.token_urlsafe(32)
         if not username or not password or not confirmation:
             flash("All fields are required.", "danger")
             return redirect(url_for("register"))
@@ -101,13 +169,15 @@ def register():
                 return redirect(url_for("register"))
             password_hash = generate_password_hash(password)
             db.execute(
-                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                "INSERT INTO users (username, password_hash, token) VALUES (?, ?, ?)",
                 username,
                 password_hash,
+                token,
             )
             session["user_id"] = db.execute(
                 "SELECT id FROM users WHERE username = ?", username
             )[0]["id"]
+            session["token"] = token
             if starter:
                 start(db, session["user_id"])
         except sqlite3.Error:
@@ -128,7 +198,7 @@ def login():
             return redirect(url_for("login"))
         try:
             user_rows = db.execute(
-                "SELECT id, password_hash FROM users WHERE username = ?",
+                "SELECT id, password_hash, token FROM users WHERE username = ?",
                 username,
             )
         except sqlite3.Error:
@@ -140,6 +210,7 @@ def login():
             flash("Invalid username and/or password.", "danger")
             return redirect(url_for("login"))
         session["user_id"] = user_rows[0]["id"]
+        session["token"] = user_rows[0]["token"]
         return redirect(url_for("index"))
     return render_template("login.html")
 
@@ -212,7 +283,7 @@ def flashcards():
                 w.id, 
                 w.word, 
                 w.translation,
-                COALESCE(uw.context, w.context) AS context
+                uw.context AS context
                 FROM words w
                 JOIN user_words uw ON w.id = uw.word_id
                 WHERE uw.user_id = ? 
@@ -228,7 +299,7 @@ def flashcards():
                 w.id, 
                 w.word, 
                 w.translation,
-                COALESCE(uw.context, w.context) AS context
+                uw.context AS context
                 FROM words w
                 JOIN user_words uw ON w.id = uw.word_id
                 WHERE uw.user_id = ? 
@@ -259,13 +330,13 @@ def add():
                 context = None
             word_id = db.execute(
                 """
-                INSERT INTO words (word, translation, context)
-                VALUES (?, ?, ?)
-                ON CONFLICT(word, translation) DO UPDATE SET 
-                    context = COALESCE(words.context, EXCLUDED.context)
+                INSERT INTO words (word, translation)
+                VALUES (?, ?)
+                ON CONFLICT(word, translation) DO UPDATE SET
+                    translation = excluded.translation
                 RETURNING id
                 """,
-                w, translation, context,
+                w, translation,
             )[0]["id"]
             db.execute(
                 """
