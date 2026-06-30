@@ -83,9 +83,10 @@ def start(db, user_id):
     db.execute(
         """
         INSERT INTO user_words (user_id, next_review, word_id, learning, repetitions, lapses)
-        SELECT ?, ?, id, 2, 0, 0 FROM words 
+        SELECT ?, ?, id, 2, 0, 0 FROM words
+        WHERE id <= 500
         ORDER BY RANDOM() 
-        LIMIT ?
+        LIMIT ? 
     """,
         user_id,
         calculate_next_review(0),
