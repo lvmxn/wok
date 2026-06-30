@@ -45,9 +45,17 @@ def server_error(error):
     )
 
 
-@app.route("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
+    if request.method == "POST":
+        mode = request.form.get("mode")
+        print(f"Selected mode: {mode}")
+        if not mode:
+            flash("Mode is required.", "danger")
+            return redirect(url_for("profile"))
+        session["mode"] = mode
+        return redirect(url_for("index"))
     return render_template("profile.html", token=session.get("token"))
 
 @app.route("/")
@@ -178,6 +186,7 @@ def register():
                 "SELECT id FROM users WHERE username = ?", username
             )[0]["id"]
             session["token"] = token
+            session["mode"] = "en"
             if starter:
                 start(db, session["user_id"])
         except sqlite3.Error:
@@ -211,6 +220,7 @@ def login():
             return redirect(url_for("login"))
         session["user_id"] = user_rows[0]["id"]
         session["token"] = user_rows[0]["token"]
+        session["mode"] = "en"
         return redirect(url_for("index"))
     return render_template("login.html")
 
@@ -288,10 +298,12 @@ def flashcards():
                 JOIN user_words uw ON w.id = uw.word_id
                 WHERE uw.user_id = ? 
                 AND uw.next_review <= ?
+                AND w.language = ?
                 ORDER BY uw.next_review ASC
                 LIMIT 20""",
             session["user_id"],
             calculate_next_review(0),
+            session["mode"],
         )
     else:
         words = db.execute(
@@ -302,10 +314,12 @@ def flashcards():
                 uw.context AS context
                 FROM words w
                 JOIN user_words uw ON w.id = uw.word_id
-                WHERE uw.user_id = ? 
+                WHERE uw.user_id = ?
+                AND w.language = ?
                 ORDER BY RANDOM()
                 LIMIT 20""",
             session["user_id"],
+            session["mode"],
         )
     return render_template("flashcards.html", words=dumps(words))
 
@@ -323,20 +337,20 @@ def add():
         w = word.strip().lower()
         try:
             if not translation:
-                q = translate(w)
+                q = translate(w, session["mode"])
                 w = q[0]
                 translation = q[1]
             if not context:  
                 context = None
             word_id = db.execute(
                 """
-                INSERT INTO words (word, translation)
-                VALUES (?, ?)
-                ON CONFLICT(word, translation) DO UPDATE SET
+                INSERT INTO words (word, translation, language)
+                VALUES (?, ?, ?)
+                ON CONFLICT(word, translation, language) DO UPDATE SET
                     translation = excluded.translation
                 RETURNING id
                 """,
-                w, translation,
+                w, translation, session["mode"],
             )[0]["id"]
             db.execute(
                 """
@@ -392,9 +406,11 @@ def my_words():
         uw.count               
         FROM words w
         JOIN user_words uw ON w.id = uw.word_id
-        WHERE uw.user_id = ? 
+        WHERE uw.user_id = ?
+        AND w.language = ?
         ORDER BY uw.next_review ASC""",
         session["user_id"],
+        session["mode"],
     )
     return render_template("my_words.html", words=words)
 

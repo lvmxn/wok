@@ -38,21 +38,20 @@ class Database:
             return cursor.rowcount
 
 
-def translate(word):
+def translate(word,lang):
     ts_list = ["google", "yandex", "bing", "deepl"]
+    word = word.strip().lower()
     has_cyr = any("а" <= ch <= "я" or ch == "ё" or ch == " " for ch in word)
-    has_lat = any("a" <= ch <= "z" or ch == " " for ch in word)
     f_lang = ""
     t_lang = ""
 
-    if has_cyr and not has_lat:
+    if has_cyr:
         f_lang = "ru"
-        t_lang = "en"
-    elif has_lat and not has_cyr:
-        f_lang = "en"
-        t_lang = "ru"
+        t_lang = lang
     else:
-        raise TranslationError("Unsupported word language")
+        f_lang = lang
+        t_lang = "ru"
+
 
     last_error = None
     for i in ts_list:

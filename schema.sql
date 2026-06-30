@@ -9,7 +9,8 @@ CREATE TABLE words (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     word TEXT NOT NULL,
     translation TEXT NOT NULL,
-    UNIQUE(word, translation)
+    language TEXT DEFAULT 'en',
+    UNIQUE(word, translation, language)
 );
 
 CREATE TABLE user_words (

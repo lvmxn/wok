@@ -7,26 +7,39 @@
 {% block main %}
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
         <h1 class="mb-3">Profile</h1>
-        <div class="d-flex align-items-center gap-3 w-100 mb-4" style="max-width: 400px;">
+        <div class="d-flex justify-content-center align-items-center gap-3 w-100 mb-4" style="max-width: 400px;">
             <h5 class="mb-0 flex-shrink-0">Token</h5>
-            <input id="token-input" type="text" class="form-control inp-txt" value="{{ token }}" readonly spellcheck="false">
+            <input id="token-input" type="text" class="form-control inp-txt flex-grow-1" value="{{ token }}" readonly spellcheck="false">
             <button type="button" class="btn btn-mono-outline btn-normal-case flex-shrink-0" id="copy-token-btn">Copy</button>
         </div>
-        <script>
-            const tokenInput = document.getElementById('token-input');
-            const copyTokenBtn = document.getElementById('copy-token-btn');
+        <div class="d-flex justify-content-center align-items-center gap-3 w-100 mb-4" style="max-width: 400px;">
+            <form class="d-flex justify-content-center align-items-center gap-3 w-100" action="/profile" method="post" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
+                <h5 class="mb-0 flex-shrink-0">Mode</h5>
+                <div class="btn-group flex-shrink-0" role="group" aria-label="Language selection">
+                    <input type="radio" class="btn-check" name="mode" id="mode-en" value="en" checked required>
+                    <label class="btn btn-outline-dark btn-sm px-3 lang-btn" for="mode-en">EN</label>
+                    <input type="radio" class="btn-check" name="mode" id="mode-sk" value="sk">
+                    <label class="btn btn-outline-dark btn-sm px-3 lang-btn" for="mode-sk">SK</label>
+                </div>
 
-            copyTokenBtn.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(tokenInput.value);
-                    copyTokenBtn.textContent = 'Copied!';
-                    setTimeout(() => {
-                        copyTokenBtn.textContent = 'Copy';
-                    }, 1200);
-                } catch (error) {
-                    console.error('Copy failed:', error);
-                }
-            });
-        </script>
+                <button class="btn btn-mono-outline btn-caps btn-sm flex-shrink-0" type="submit">Submit</button>
+            </form>
+        </div>
     </div>
+    <script>
+        const tokenInput = document.getElementById('token-input');
+        const copyTokenBtn = document.getElementById('copy-token-btn');
+
+        copyTokenBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(tokenInput.value);
+                copyTokenBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyTokenBtn.textContent = 'Copy';
+                }, 1200);
+            } catch (error) {
+                console.error('Copy failed:', error);
+            }
+        });
+    </script>
 {% endblock %}
