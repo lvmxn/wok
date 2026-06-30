@@ -6,6 +6,8 @@
 
 {% block main %}
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
+        <h1 class="mb-2">Flashcards</h1>
+        <h5 class="mb-2" id="counter"></h5>
         <div class="card card-mono mx-auto my-3" style="width: 18rem;">
             <div class="card-body py-2 px-3 text-center"> 
                 <div id="flashcard-text-wrapper" style="cursor: pointer;" onclick="speakCurrentWord()">
@@ -52,7 +54,7 @@
                 }
                 document.getElementById('flashcard-text').textContent = word;
                 document.getElementById('context').textContent = context;
-            
+                document.getElementById('counter').textContent = `Card ${num + 1} of ${words.length}`;
                 currentAudio = preloadAudio(word);
                 if (words.length > 1) {
                     nextAudio = preloadAudio(words[1].word);
@@ -81,6 +83,7 @@
                 exit("finish");
                 return ;
             }
+            document.getElementById('counter').textContent = `Card ${num + 1} of ${words.length}`;
             word = words[num].word;
             translation = words[num].translation;
             id = words[num].id;
