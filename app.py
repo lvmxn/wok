@@ -1,6 +1,5 @@
 import os
 import sqlite3
-from math import ceil
 from json import dumps
 from helpers import (
     Database,
@@ -50,13 +49,12 @@ def server_error(error):
 def profile():
     if request.method == "POST":
         mode = request.form.get("mode")
-        print(f"Selected mode: {mode}")
         if not mode:
             flash("Mode is required.", "danger")
             return redirect(url_for("profile"))
         session["mode"] = mode
         return redirect(url_for("index"))
-    return render_template("profile.html", token=session.get("token"))
+    return render_template("profile.html", token=session.get("token"), mode=session.get("mode"))
 
 @app.route("/")
 def index():

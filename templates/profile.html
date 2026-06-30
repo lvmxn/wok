@@ -16,9 +16,11 @@
             <form class="d-flex justify-content-center align-items-center gap-3 w-100" action="/profile" method="post" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                 <h5 class="mb-0 flex-shrink-0">Mode</h5>
                 <div class="btn-group flex-shrink-0" role="group" aria-label="Language selection">
-                    <input type="radio" class="btn-check" name="mode" id="mode-en" value="en" checked required>
+                    <input type="radio" class="btn-check" name="mode" id="mode-en" value="en" 
+                        {{ 'checked' if mode == 'en' else '' }} required>
                     <label class="btn btn-outline-dark btn-sm px-3 lang-btn" for="mode-en">EN</label>
-                    <input type="radio" class="btn-check" name="mode" id="mode-sk" value="sk">
+                    <input type="radio" class="btn-check" name="mode" id="mode-sk" value="sk" 
+                        {{ 'checked' if mode == 'sk' else '' }}>
                     <label class="btn btn-outline-dark btn-sm px-3 lang-btn" for="mode-sk">SK</label>
                 </div>
 

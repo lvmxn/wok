@@ -1,5 +1,4 @@
 import sqlite3
-from math import ceil
 from flask import redirect, session
 from functools import wraps
 import translators as ts
