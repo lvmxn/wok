@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 RANDOM_WORD_START_COUNT = 40
 DAY = 86400
 
+
 class TranslationError(RuntimeError):
     pass
 
@@ -38,7 +39,7 @@ class Database:
             return cursor.rowcount
 
 
-def translate(word,lang):
+def translate(word, lang):
     ts_list = ["google", "yandex", "bing", "deepl"]
     word = word.strip().lower()
     has_cyr = any("а" <= ch <= "я" or ch == "ё" or ch == " " for ch in word)
@@ -52,7 +53,6 @@ def translate(word,lang):
         f_lang = lang
         t_lang = "ru"
 
-
     last_error = None
     for i in ts_list:
         try:
@@ -60,9 +60,9 @@ def translate(word,lang):
                 word, translator=i, from_language=f_lang, to_language=t_lang
             )
             if f_lang == "ru":
-                return [result,word]
+                return [result, word]
             else:
-                return [word,result]
+                return [word, result]
         except Exception as error:
             last_error = error
 
@@ -77,20 +77,6 @@ def calculate_next_review(interval_seconds):
     if interval_seconds >= 86400:
         return next_date.replace(hour=4, minute=0)
     return next_date
-
-
-def start(db, user_id):
-    db.execute(
-        """
-        INSERT INTO user_words (user_id, next_review, word_id, learning, repetitions, lapses)
-        SELECT ?, ?, id, 2, 0, 0 FROM words 
-        ORDER BY RANDOM() 
-        LIMIT ?
-    """,
-        user_id,
-        calculate_next_review(0),
-        RANDOM_WORD_START_COUNT,
-    )
 
 
 def schedule_review(ease_factor, interval, learning, repetitions, lapses, quality):
@@ -124,26 +110,26 @@ def schedule_review(ease_factor, interval, learning, repetitions, lapses, qualit
                 next_learning,
                 next_repetitions + 1,
                 next_lapses,
-                calculate_next_review(30*60),
+                calculate_next_review(30 * 60),
             )
 
         if quality == "easy":
             next_ease = round(next_ease + 0.15, 2)
             next_learning = 0
             next_repetitions += 1
-            if interval >= 10*DAY:
-                next_interval = 5*DAY
+            if interval >= 10 * DAY:
+                next_interval = 5 * DAY
             else:
-                next_interval = 24*DAY
+                next_interval = 24 * DAY
             return (
-            next_ease,
-            next_interval,
-            next_learning,
-            next_repetitions,
-            next_lapses,
-            calculate_next_review(next_interval),
+                next_ease,
+                next_interval,
+                next_learning,
+                next_repetitions,
+                next_lapses,
+                calculate_next_review(next_interval),
             )
-        
+
         next_learning = 1
         next_repetitions += 1
         return (
@@ -152,7 +138,7 @@ def schedule_review(ease_factor, interval, learning, repetitions, lapses, qualit
             next_learning,
             next_repetitions,
             next_lapses,
-            calculate_next_review(30*60),
+            calculate_next_review(30 * 60),
         )
 
     if learning == 1:
@@ -164,11 +150,11 @@ def schedule_review(ease_factor, interval, learning, repetitions, lapses, qualit
                 1,
                 next_repetitions + 1,
                 next_lapses,
-                calculate_next_review(30*60),
+                calculate_next_review(30 * 60),
             )
 
-        if interval >= 10*DAY:
-            next_interval = 5*DAY
+        if interval >= 10 * DAY:
+            next_interval = 5 * DAY
         else:
             next_interval = DAY
         next_learning = 0
@@ -186,15 +172,21 @@ def schedule_review(ease_factor, interval, learning, repetitions, lapses, qualit
 
     if quality == "hard":
         next_ease = max(1.3, round(next_ease - 0.15, 2))
-        next_interval = max(1, round((next_interval//DAY) * 1.2))*DAY
+        next_interval = max(1, round((next_interval // DAY) * 1.2)) * DAY
     elif quality == "normal":
-        next_interval = max(1, round((next_interval//DAY) * next_ease))*DAY
+        next_interval = max(1, round((next_interval // DAY) * next_ease)) * DAY
     elif quality == "easy":
         next_ease = round(next_ease + 0.15, 2)
-        next_interval = max(1, round((next_interval//DAY) * next_ease * 1.3))*DAY
+        next_interval = max(1, round((next_interval // DAY) * next_ease * 1.3)) * DAY
 
     if next_ease < 1.3:
         next_ease = 1.3
     next_repetitions += 1
-    return next_ease, next_interval, 0, next_repetitions, next_lapses, calculate_next_review(next_interval)
-
+    return (
+        next_ease,
+        next_interval,
+        0,
+        next_repetitions,
+        next_lapses,
+        calculate_next_review(next_interval),
+    )
