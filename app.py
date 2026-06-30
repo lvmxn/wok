@@ -6,7 +6,6 @@ from helpers import (
     TranslationError,
     login_required,
     translate,
-    start,
     calculate_next_review,
     schedule_review,
 )
@@ -29,7 +28,7 @@ import secrets
 
 app = Flask(__name__)
 db = Database("database.db")
-app.secret_key = os.environ.get("SECRET_KEY", "123")
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_urlsafe(32)
 
 @app.errorhandler(404)
 def not_found(error):
@@ -158,7 +157,6 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
-        starter = request.form.get("starter") == 'true'
         token = secrets.token_urlsafe(32)
         if not username or not password or not confirmation:
             flash("All fields are required.", "danger")
@@ -185,8 +183,6 @@ def register():
             )[0]["id"]
             session["token"] = token
             session["mode"] = "en"
-            if starter:
-                start(db, session["user_id"])
         except sqlite3.Error:
             flash("Could not create your account right now.", "danger")
             return redirect(url_for("register"))
@@ -414,4 +410,7 @@ def my_words():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5000, debug=True)
+    debug = os.environ.get("FLASK_DEBUG", "").lower() in {"1", "true", "yes", "on"}
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host=host, port=port, debug=debug)

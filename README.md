@@ -82,7 +82,6 @@ This keeps the review flow simple while still giving each word a personalized sc
 - [helpers.py](helpers.py)
 - [schema.sql](schema.sql)
 - [init_db.py](init_db.py)
-- [seed_db.py](seed_db.py)
 - [templates/](templates)
 - [static/](static)
 
