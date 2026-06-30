@@ -100,7 +100,7 @@ def capture_word():
     id = user_rows[0]["id"]
     w = word.strip().lower()
     try:
-        q = translate(w)
+        q = translate(w,session.get("mode"))
     except TranslationError:
         return jsonify({"status": "error", "message": "Could not translate word"}), 422
     w = q[0]
@@ -267,7 +267,7 @@ def flashcards():
             data_db[0]["learning"],
             data_db[0]["repetitions"],
             data_db[0]["lapses"],
-            quality,
+            quality
         )
 
         try:

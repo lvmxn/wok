@@ -29,6 +29,7 @@ class Database:
         with sqlite3.connect(self.db_path, timeout=30.0) as conn:
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA foreign_keys = ON;")
             cursor = conn.cursor()
             cursor.execute(query, args)
             if cursor.description is not None:
