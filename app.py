@@ -69,7 +69,7 @@ def get_tts():
     text = request.args.get("word", "")
     if not text:
         return "Missing word", 400
-    tts = gTTS(text=text, lang="en")
+    tts = gTTS(text=text, lang=session.get("mode"))
     fp = io.BytesIO()
     tts.write_to_fp(fp)
     fp.seek(0)
