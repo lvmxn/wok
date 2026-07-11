@@ -42,7 +42,7 @@ class Database:
 def translate(word, lang):
     ts_list = ["google", "yandex", "bing", "deepl"]
     word = word.strip().lower()
-    has_cyr = any("а" <= ch <= "я" or ch == "ё"for ch in word)
+    has_cyr = any("а" <= ch <= "я" or ch == "ё" for ch in word)
     f_lang = ""
     t_lang = ""
 
