@@ -252,17 +252,16 @@ def tasks():
 @app.route("/flashcards", methods=["GET", "POST"])
 @login_required
 def flashcards():
-    global mode
     if request.method == "POST":
         data_j = request.get_json()
         if not isinstance(data_j, dict):
             return jsonify({"status": "error", "message": "Invalid request body"}), 400
         action = data_j.get('action')
         if action == "start":
-            mode = data_j.get('mode')
+            session["flashcards_mode"] = data_j.get('mode')
             tag = data_j.get('tag')
             tag = '%' if tag == 'all' else tag
-            if mode == "free":
+            if session.get("flashcards_mode") == "free":
                 try:
                     words = db.execute(
                         """SELECT 
@@ -311,7 +310,7 @@ def flashcards():
                 except sqlite3.Error:
                     words = []
             return jsonify(words)
-        if mode == "free":
+        if session.get("flashcards_mode") == "free":
             return (
                 jsonify(
                     {"status": "success", "message": "Free mode: review not saved"}
@@ -404,7 +403,7 @@ def add():
                 translation,
                 session["mode"],
             )[0]["id"]
-            db.execute(
+            user_word_id = db.execute(
                 """
                 INSERT INTO user_words (user_id, word_id, context, next_review, learning, repetitions, lapses)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -413,6 +412,7 @@ def add():
                         WHEN EXCLUDED.context IS NOT NULL THEN EXCLUDED.context 
                         ELSE user_words.context 
                     END
+                RETURNING id
                 """,
                 session["user_id"],
                 word_id,
@@ -421,24 +421,28 @@ def add():
                 2,
                 0,
                 0,
-            )
-            tag_id = db.execute(
+            )[0]['id']
+            db.execute(
                 """
                 INSERT INTO tags (user_id, name)
-                VALUES (?,?)
+                VALUES (?, ?)
                 ON CONFLICT(user_id, name) DO NOTHING
-                RETURNING id
                 """,
                 session["user_id"],
                 tag,
             )
+            tag_id = db.execute(
+                "SELECT id FROM tags WHERE user_id = ? AND name = ?",
+                session["user_id"],
+                tag,
+            )[0]["id"]
             db.execute(
                 '''
                 INSERT INTO user_word_tags (user_word_id, tag_id)
                 VALUES (?,?)
                 ON CONFLICT(user_word_id, tag_id) DO NOTHING
                 ''',
-                word_id,
+                user_word_id,
                 tag_id,
             )
         except (TranslationError, sqlite3.Error):

@@ -34,7 +34,7 @@ CREATE TABLE tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     name TEXT DEFAULT 'general',
-    UNIQUE(user_id, name)
+    UNIQUE(user_id, name),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
