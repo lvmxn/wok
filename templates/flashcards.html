@@ -5,6 +5,33 @@
 {% endblock %}
 
 {% block main %}
+    <div class="modal fade " id="collectionModal" tabindex="-1" aria-hidden="true">
+        <div class=" modal-dialog modal-dialog-centered">
+            <div class="collectionModal modal-content border ">
+                <div  class="collectionModal modal-header ">
+                    <h5 class="modal-title ">Choose your option</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Pick what you want to practice before starting.</p>
+                    <div class="d-flex flex-column flex-md-row align-items-start gap-4 gap-md-5 mb-4">
+                        <select class="form-select inp-txt" id="mode-select">
+                            <option value="traning">Traning mode</option>
+                            <option value="free">Free mode</option>
+                        </select>
+                        <select class="form-select inp-txt" id="collection-select">
+                            <option value="all">All words</option>
+                            {% for tag in tags %}
+                                <option value="{{ tag["name"] }}">{{ tag["name"] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer ">
+                    <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" id="start-task-btn">Start</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
         <h1 class="mb-2">Flashcards</h1>
         <h5 class="mb-2" id="counter"></h5>
@@ -28,7 +55,7 @@
     </div>
 
     <script>
-        const words = {{ words | safe }};
+        let words = [];
         let num = 0;
         let showingWord = true;
         let word = '';
@@ -38,7 +65,43 @@
         let finish = false;
         let currentAudio = null;
         let nextAudio = null;
+        let tag = '';
+        let mode = '';
+
         document.addEventListener('DOMContentLoaded', function() {
+            const collectionModal = new bootstrap.Modal(document.getElementById('collectionModal'), {
+                backdrop: false,
+                keyboard: false
+            });
+            collectionModal.show();
+            document.getElementById('start-task-btn').addEventListener('click', async function() {
+                tag = document.getElementById('collection-select').value;
+                mode = document.getElementById('mode-select').value;
+                try {
+                    await get_words();
+                    collectionModal.hide();
+                } catch (error) {
+                    console.error(error);
+                }                
+            });
+        });
+
+        async function get_words() {
+            const response = await fetch('/flashcards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'start', mode, tag })
+            });
+
+            if (!response.ok) {
+                throw new Error(await response.text());
+            }
+
+            words = await response.json();
+            initFlashcards();
+        }
+        
+        function initFlashcards(){
             if (words.length === 0) { 
                 exit("empty");
             } 
@@ -74,7 +137,7 @@
                 }
                 showingWord = !showingWord;
             });
-        });
+        }
 
         async function showNextCard() {
             num++;
@@ -117,7 +180,7 @@
                 await fetch('/flashcards', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id : currentid, quality: quality })
+                    body: JSON.stringify({action: 'answer', id : currentid, quality: quality })
                 });
             } catch (error) {
                 console.error("Net error:", error);

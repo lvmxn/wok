@@ -324,3 +324,15 @@ body {
 .btn-delete-cross:hover {
   opacity: 1;
 }
+
+.collectionModal{
+    background-color: #121212 !important;
+}
+
+.modal {
+    pointer-events: none;
+}
+
+.modal-dialog {
+    pointer-events: auto;
+}

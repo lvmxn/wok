@@ -81,17 +81,38 @@ def calculate_next_review(interval_seconds):
 
 def start(db, user_id):
     db.execute(
+        "INSERT INTO tags (user_id, name) VALUES (?, ?)", 
+        user_id,
+        "starter pack",
+    )
+    tag_id = db.execute(
+        "SELECT id FROM tags WHERE user_id = ? AND name = ?", 
+        user_id,
+        "starter pack",
+    )[0]["id"]
+    ids = db.execute(
         """
         INSERT INTO user_words (user_id, next_review, word_id, learning, repetitions, lapses)
         SELECT ?, ?, id, 2, 0, 0 FROM words
         WHERE id <= 500
         ORDER BY RANDOM() 
         LIMIT ? 
-    """,
+        RETURNING id
+        """,
         user_id,
         calculate_next_review(0),
         RANDOM_WORD_START_COUNT,
     )
+    if ids:
+        placeholders = ", ".join(["(?, ?)" for _ in ids])
+        args = []
+        for row in ids:
+            args.extend([row["id"], tag_id])
+        
+        db.execute(
+            f"INSERT INTO user_word_tags (user_word_id, tag_id) VALUES {placeholders}",
+            *args
+        )
 
 
 def schedule_review(ease_factor, interval, learning, repetitions, lapses, quality):

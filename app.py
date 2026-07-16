@@ -192,6 +192,11 @@ def register():
             session["user_id"] = db.execute(
                 "SELECT id FROM users WHERE username = ?", username
             )[0]["id"]
+            db.execute(
+                "INSERT INTO tags (user_id, name) VALUES (?, ?)",
+                session["user_id"],
+                "general",
+            )
             session["token"] = token
             session["mode"] = "en"
             if starter:
@@ -247,19 +252,72 @@ def tasks():
 @app.route("/flashcards", methods=["GET", "POST"])
 @login_required
 def flashcards():
-    free = request.args.get("mode") == "free"
-
+    global mode
     if request.method == "POST":
-        if free:
+        data_j = request.get_json()
+        if not isinstance(data_j, dict):
+            return jsonify({"status": "error", "message": "Invalid request body"}), 400
+        action = data_j.get('action')
+        if action == "start":
+            mode = data_j.get('mode')
+            tag = data_j.get('tag')
+            tag = '%' if tag == 'all' else tag
+            if mode == "free":
+                try:
+                    words = db.execute(
+                        """SELECT 
+                            w.id, 
+                            w.word, 
+                            w.translation,
+                            uw.context AS context
+                            FROM words w
+                            JOIN user_words uw ON w.id = uw.word_id
+                            JOIN user_word_tags uwt ON uw.id = uwt.user_word_id
+                            JOIN tags t ON uwt.tag_id = t.id
+                            WHERE uw.user_id = ?
+                            AND w.language = ?
+                            AND t.name LIKE ?
+                            ORDER BY RANDOM()
+                            LIMIT 20""",
+                        session["user_id"],
+                        session["mode"],
+                        tag,
+                    )
+                except sqlite3.Error:
+                    words = []
+            else:
+                try:
+                    words = db.execute(
+                        """SELECT 
+                            w.id, 
+                            w.word, 
+                            w.translation,
+                            uw.context AS context
+                            FROM words w
+                            JOIN user_words uw ON w.id = uw.word_id
+                            JOIN user_word_tags uwt ON uw.id = uwt.user_word_id
+                            JOIN tags t ON uwt.tag_id = t.id
+                            WHERE uw.user_id = ?
+                            AND w.language = ?
+                            AND t.name LIKE ?
+                            AND uw.next_review <= ?
+                            ORDER BY uw.next_review ASC
+                            LIMIT 20""",
+                        session["user_id"],
+                        session["mode"],
+                        tag,
+                        calculate_next_review(0),
+                    )
+                except sqlite3.Error:
+                    words = []
+            return jsonify(words)
+        if mode == "free":
             return (
                 jsonify(
                     {"status": "success", "message": "Free mode: review not saved"}
                 ),
                 200,
             )
-        data_j = request.get_json()
-        if not isinstance(data_j, dict):
-            return jsonify({"status": "error", "message": "Invalid request body"}), 400
         id = data_j.get("id")
         quality = data_j.get("quality")
         try:
@@ -286,7 +344,6 @@ def flashcards():
                 quality,
             )
         )
-
         try:
             db.execute(
                 "UPDATE user_words SET ease_factor = ?, interval = ?, learning = ?, repetitions = ?, lapses = ?, next_review = ?, count = count + 1 WHERE user_id = ? AND word_id = ?",
@@ -302,41 +359,18 @@ def flashcards():
         except sqlite3.Error:
             return jsonify({"status": "error", "message": "Could not save review"}), 500
         return jsonify({"status": "success"}), 200
-    if not free:
-        words = db.execute(
-            """SELECT 
-                w.id, 
-                w.word, 
-                w.translation,
-                uw.context AS context
-                FROM words w
-                JOIN user_words uw ON w.id = uw.word_id
-                WHERE uw.user_id = ? 
-                AND uw.next_review <= ?
-                AND w.language = ?
-                ORDER BY uw.next_review ASC
-                LIMIT 20""",
-            session["user_id"],
-            calculate_next_review(0),
-            session["mode"],
+    try:
+        tags = db.execute(
+            """SELECT
+                name
+                FROM tags
+                WHERE user_id = ?
+            """,
+            session["user_id"]
         )
-    else:
-        words = db.execute(
-            """SELECT 
-                w.id, 
-                w.word, 
-                w.translation,
-                uw.context AS context
-                FROM words w
-                JOIN user_words uw ON w.id = uw.word_id
-                WHERE uw.user_id = ?
-                AND w.language = ?
-                ORDER BY RANDOM()
-                LIMIT 20""",
-            session["user_id"],
-            session["mode"],
-        )
-    return render_template("flashcards.html", words=dumps(words))
+    except sqlite3.Error:
+        tags=[]
+    return render_template("flashcards.html", tags=tags)
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -346,6 +380,7 @@ def add():
         word = request.form.get("word")
         translation = request.form.get("translation")
         context = request.form.get("context")
+        tag = request.form.get("tag")
         if not word:
             flash("Word field is required.", "danger")
             return redirect(url_for("add"))
@@ -386,6 +421,25 @@ def add():
                 2,
                 0,
                 0,
+            )
+            tag_id = db.execute(
+                """
+                INSERT INTO tags (user_id, name)
+                VALUES (?,?)
+                ON CONFLICT(user_id, name) DO NOTHING
+                RETURNING id
+                """,
+                session["user_id"],
+                tag,
+            )
+            db.execute(
+                '''
+                INSERT INTO user_word_tags (user_word_id, tag_id)
+                VALUES (?,?)
+                ON CONFLICT(user_word_id, tag_id) DO NOTHING
+                ''',
+                word_id,
+                tag_id,
             )
         except (TranslationError, sqlite3.Error):
             flash("Could not add that word right now.", "danger")
