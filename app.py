@@ -44,6 +44,7 @@ def server_error(error):
         500,
     )
 
+
 @app.route("/dictation", methods=["GET", "POST"])
 @login_required
 def dictation():
@@ -182,9 +183,12 @@ def capture_word():
     except (TranslationError, sqlite3.Error):
         return jsonify({"status": "error", "message": "Failed to save word"}), 500
 
-    return jsonify(
-        {"status": "success", "word": w, "translation": translation, "tag": tag}
-    ), 200
+    return (
+        jsonify(
+            {"status": "success", "word": w, "translation": translation, "tag": tag}
+        ),
+        200,
+    )
 
 
 @app.context_processor
@@ -295,11 +299,11 @@ def flashcards():
         data_j = request.get_json()
         if not isinstance(data_j, dict):
             return jsonify({"status": "error", "message": "Invalid request body"}), 400
-        action = data_j.get('action')
+        action = data_j.get("action")
         if action == "start":
-            session["flashcards_mode"] = data_j.get('mode')
-            tag = data_j.get('tag')
-            tag = '%' if tag == 'all' else tag
+            session["flashcards_mode"] = data_j.get("mode")
+            tag = data_j.get("tag")
+            tag = "%" if tag == "all" else tag
             if session.get("flashcards_mode") == "free":
                 try:
                     words = db.execute(
@@ -404,10 +408,10 @@ def flashcards():
                 FROM tags
                 WHERE user_id = ?
             """,
-            session["user_id"]
+            session["user_id"],
         )
     except sqlite3.Error:
-        tags=[]
+        tags = []
     return render_template("flashcards.html", tags=tags)
 
 
@@ -462,7 +466,7 @@ def add():
                 2,
                 0,
                 0,
-            )[0]['id']
+            )[0]["id"]
             db.execute(
                 """
                 INSERT INTO tags (user_id, name)
@@ -478,11 +482,11 @@ def add():
                 tag,
             )[0]["id"]
             db.execute(
-                '''
+                """
                 INSERT INTO user_word_tags (user_word_id, tag_id)
                 VALUES (?,?)
                 ON CONFLICT(user_word_id, tag_id) DO NOTHING
-                ''',
+                """,
                 user_word_id,
                 tag_id,
             )
@@ -535,4 +539,4 @@ def my_words():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -81,12 +81,12 @@ def calculate_next_review(interval_seconds):
 
 def start(db, user_id):
     db.execute(
-        "INSERT INTO tags (user_id, name) VALUES (?, ?)", 
+        "INSERT INTO tags (user_id, name) VALUES (?, ?)",
         user_id,
         "starter pack",
     )
     tag_id = db.execute(
-        "SELECT id FROM tags WHERE user_id = ? AND name = ?", 
+        "SELECT id FROM tags WHERE user_id = ? AND name = ?",
         user_id,
         "starter pack",
     )[0]["id"]
@@ -108,10 +108,10 @@ def start(db, user_id):
         args = []
         for row in ids:
             args.extend([row["id"], tag_id])
-        
+
         db.execute(
             f"INSERT INTO user_word_tags (user_word_id, tag_id) VALUES {placeholders}",
-            *args
+            *args,
         )
 
 
