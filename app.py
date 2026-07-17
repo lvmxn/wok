@@ -84,6 +84,8 @@ def capture_word():
     token = data.get("token")
     word = data.get("word")
     context = data.get("context")
+    mode = data.get("mode") or "en"
+    tag = data.get("tag")
     if not token:
         return jsonify({"status": "error", "message": "Missing token"}), 400
     if not word:
@@ -92,6 +94,10 @@ def capture_word():
         context = context.strip()
     if not context:
         context = None
+    if isinstance(tag, str):
+        tag = tag.strip().lower()
+    if not tag:
+        tag = "general"
     try:
         user_rows = db.execute(
             "SELECT id FROM users WHERE token = ?",
@@ -107,7 +113,7 @@ def capture_word():
     id = user_rows[0]["id"]
     w = word.strip().lower()
     try:
-        q = translate(w, session.get("mode"))
+        q = translate(w, mode)
     except TranslationError:
         return jsonify({"status": "error", "message": "Could not translate word"}), 422
     w = q[0]
@@ -115,16 +121,17 @@ def capture_word():
     try:
         word_id = db.execute(
             """
-            INSERT INTO words (word, translation)
-            VALUES (?, ?)
-            ON CONFLICT(word, translation) DO UPDATE SET
+            INSERT INTO words (word, translation, language)
+            VALUES (?, ?, ?)
+            ON CONFLICT(word, translation, language) DO UPDATE SET
                 translation = excluded.translation
             RETURNING id
             """,
             w,
             translation,
+            mode,
         )[0]["id"]
-        db.execute(
+        user_word_id = db.execute(
             """
             INSERT INTO user_words (user_id, word_id, context, next_review, learning, repetitions, lapses)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -133,6 +140,7 @@ def capture_word():
                     WHEN EXCLUDED.context IS NOT NULL THEN EXCLUDED.context 
                     ELSE user_words.context 
                 END
+            RETURNING id
             """,
             id,
             word_id,
@@ -141,11 +149,36 @@ def capture_word():
             2,
             0,
             0,
+        )[0]["id"]
+        db.execute(
+            """
+            INSERT INTO tags (user_id, name)
+            VALUES (?, ?)
+            ON CONFLICT(user_id, name) DO NOTHING
+            """,
+            id,
+            tag,
+        )
+        tag_id = db.execute(
+            "SELECT id FROM tags WHERE user_id = ? AND name = ?",
+            id,
+            tag,
+        )[0]["id"]
+        db.execute(
+            """
+            INSERT INTO user_word_tags (user_word_id, tag_id)
+            VALUES (?, ?)
+            ON CONFLICT(user_word_id, tag_id) DO NOTHING
+            """,
+            user_word_id,
+            tag_id,
         )
     except (TranslationError, sqlite3.Error):
         return jsonify({"status": "error", "message": "Failed to save word"}), 500
 
-    return jsonify({"status": "success", "word": w, "translation": translation}), 200
+    return jsonify(
+        {"status": "success", "word": w, "translation": translation, "tag": tag}
+    ), 200
 
 
 @app.context_processor
@@ -384,6 +417,8 @@ def add():
             flash("Word field is required.", "danger")
             return redirect(url_for("add"))
         w = word.strip().lower()
+        if not tag:
+            tag = "general"
         try:
             if not translation:
                 q = translate(w, session["mode"])
