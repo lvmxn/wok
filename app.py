@@ -28,7 +28,7 @@ import secrets
 
 app = Flask(__name__)
 db = Database("database.db")
-app.secret_key = os.environ.get("SECRET_KEY", "123")
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_urlsafe(32)
 os.environ["translators_default_region"] = "EN"
 
 
@@ -535,4 +535,4 @@ def my_words():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
