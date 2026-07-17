@@ -29,6 +29,7 @@ import secrets
 app = Flask(__name__)
 db = Database("database.db")
 app.secret_key = os.environ.get("SECRET_KEY", "123")
+os.environ["translators_default_region"] = "EN"
 
 
 @app.errorhandler(404)
@@ -42,6 +43,11 @@ def server_error(error):
         render_template("error.html", error_code=500, error_message="Server error"),
         500,
     )
+
+@app.route("/dictation", methods=["GET", "POST"])
+@login_required
+def dictation():
+    return render_template("dictation.html")
 
 
 @app.route("/profile", methods=["GET", "POST"])

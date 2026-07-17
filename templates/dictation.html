@@ -1,0 +1,290 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Dictation
+{% endblock %}
+
+{% block main %}
+    <div class="modal fade" id="collectionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="collectionModal modal-content border dictation-modal-content">
+                <div class="collectionModal modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title">Build your dictation list</h5>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="mb-3">Upload one file (txt, csv, docx) or paste your words below. You can also use both and merge.</p>
+                    <div class="dictation-source-grid">
+                        <div class="dictation-source-card">
+                            <label for="file-selector" class="dictation-label">Upload file</label>
+                            <input class="inp-txt form-control" type="file" id="file-selector" accept=".txt,.csv,.docx">
+                            <small class="dictation-help">Supported: txt, csv, docx</small>
+                        </div>
+                        <div class="dictation-source-card">
+                            <label for="text" class="dictation-label">Or type words manually</label>
+                            <textarea class="inp-txt form-control dictation-textarea" id="text" placeholder="one word per line&#10;or comma separated"></textarea>
+                            <small class="dictation-help">Use line breaks, commas, semicolons, or tabs as separators</small>
+                        </div>
+                    </div>
+                    <div id="dictation-validation" class="dictation-validation mt-3"></div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-primary btn-mono-outline btn-normal-case" id="start-task-btn">Start Dictation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container min-vh-100 d-flex flex-column align-items-center main-content justify-content-center">
+        <h1 class="mb-2">Dictation</h1>
+        <h5 class="mb-2" id="counter"></h5>
+        <div class="card card-mono mx-auto my-3 dictation-card">
+            <div class="card-body py-3 px-3 text-center">
+                <p class="dictation-caption">Tap the card to hear pronunciation</p>
+                <div id="dictation-text-wrapper" style="cursor: pointer;" onclick="speakCurrentWord()">
+                    <h5 style="font-weight: 650; margin-bottom: 0;" class="card-title py-3" id="dictation-text">Start by loading words</h5>
+                </div>
+                <input autocomplete="off" class="form-control inp-txt mt-2 mb-3" id="answer-input" type="text" placeholder="Type what you hear">
+                <div id="dictation-feedback" class="dictation-feedback mb-3"></div>
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-3 mb-2">
+                    <div class="mt-2">
+                        <a href="#" class="btn btn-mono-outline btn-normal-case" id="skip-btn">Skip</a>
+                    </div>
+                    <div class="mt-2">
+                        <a href="#" class="btn btn-mono-outline btn-normal-case" id="confirm-btn">Confirm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script>
+        let words = [];
+        let num = 0;
+        let finish = false;
+        let currentAudio = null;
+        let word = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const collectionModal = new bootstrap.Modal(document.getElementById('collectionModal'), {
+                backdrop: false,
+                keyboard: false
+            });
+            collectionModal.show();
+
+            document.getElementById('confirm-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                checkAnswer();
+            });
+
+            document.getElementById('skip-btn').addEventListener('click', function(e) {
+                if (finish) {
+                    return;
+                }
+                e.preventDefault();
+                showFeedback(`Skipped. Right answer: <strong>${escapeHtml(word)}</strong>`, 'warning');
+                moveNext();
+            });
+
+            document.getElementById('answer-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkAnswer();
+                }
+            });
+
+            document.getElementById('start-task-btn').addEventListener('click', async function() {
+                try {
+                    words = await collectWords();
+                    if (words.length === 0) {
+                        showValidation('Add words first: upload a file or paste text.', 'danger');
+                        return;
+                    }
+                    num = 0;
+                    finish = false;
+                    collectionModal.hide();
+                    initDictation();
+                } catch (error) {
+                    showValidation(error.message || 'Could not parse your input.', 'danger');
+                }                
+            });
+        });
+
+        async function collectWords() {
+            const allWords = [];
+            const fileInput = document.getElementById('file-selector');
+            const textArea = document.getElementById('text');
+
+            if (fileInput.files.length > 0) {
+                const fileWords = await parseFile(fileInput.files[0]);
+                allWords.push(...fileWords);
+            }
+
+            const manualText = textArea.value.trim();
+            if (manualText) {
+                allWords.push(...splitWords(manualText));
+            }
+
+            return uniqueWords(allWords);
+        }
+
+        async function parseFile(file) {
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.txt') || name.endsWith('.csv')) {
+                const text = await file.text();
+                return splitWords(text);
+            }
+            if (name.endsWith('.docx')) {
+                if (!window.mammoth) {
+                    throw new Error('DOCX parser is not available. Try txt or csv.');
+                }
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                return splitWords(result.value || '');
+            }
+            throw new Error('Unsupported file type. Use txt, csv, or docx.');
+        }
+
+        function splitWords(text) {
+            return text
+                .split(/[\n,;\t]+/)
+                .map(w => w.trim())
+                .filter(Boolean);
+        }
+
+        function uniqueWords(items) {
+            const result = [];
+            const seen = new Set();
+            for (const item of items) {
+                const key = item.toLowerCase();
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    result.push(item);
+                }
+            }
+            return result;
+        }
+
+        function initDictation() {
+            const feedback = document.getElementById('dictation-feedback');
+            feedback.innerHTML = '';
+            feedback.className = 'dictation-feedback mb-3';
+            if (words.length === 0) { 
+                exit("empty");
+                return;
+            }
+            renderCurrentCard();
+            speakCurrentWord();
+        }
+
+        function renderCurrentCard() {
+            word = words[num];
+            document.getElementById('dictation-text').textContent = 'Listen and type';
+            document.getElementById('counter').textContent = `Word ${num + 1} of ${words.length}`;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+            currentAudio = preloadAudio(word);
+        }
+
+        function moveNext(preserveFeedback = false) {
+            num++;
+            if (num >= words.length) {
+                exit("finish", preserveFeedback);
+                return;
+            }
+            renderCurrentCard();
+            speakCurrentWord();
+        }
+
+        function checkAnswer() {
+            if (finish) {
+                return;
+            }
+            const answer = document.getElementById('answer-input').value.trim();
+            if (!answer) {
+                showFeedback('Type your answer first.', 'warning');
+                return;
+            }
+            if (normalizeWord(answer) === normalizeWord(word)) {
+                showFeedback('Correct', 'success');
+                moveNext(true);
+                return;
+            }
+            words.push(word);
+            showFeedback(`Not quite. Moved to the end: <strong>${escapeHtml(word)}</strong>`, 'danger');
+            moveNext();
+        }
+
+        function disable() {
+            document.getElementById('answer-input').disabled = true;
+            document.getElementById('confirm-btn').classList.add('disabled');
+            document.getElementById('skip-btn').textContent = 'To main page';
+            document.getElementById('skip-btn').href = '/';
+        }
+
+        function exit(reason, keepFeedback = false) {
+            finish = true;
+            if (reason == 'empty') {
+                word = "No cards for this time";
+            } else if (reason == 'finish') {
+                word = "Task finished";
+            }
+            document.getElementById('dictation-text').textContent = word;
+            document.getElementById('counter').textContent = '';
+            if (!keepFeedback) {
+                showFeedback('', '');
+            }
+            disable();
+        }
+
+        function preloadAudio(text) {
+            if (!text) return null;
+            const url = `/api/tts?word=${encodeURIComponent(text)}`;
+            const audio = new Audio(url);
+            audio.playbackRate = 1;
+            audio.load();
+            return audio;
+        }
+
+        function speakCurrentWord() {
+            if (finish) {
+                return;
+            }
+            if (currentAudio) {
+                currentAudio.currentTime = 0;
+                currentAudio.play().catch(err => console.error("TTS Replay error:", err));
+            }
+        }
+
+        function normalizeWord(value) {
+            return value
+                .toLowerCase()
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function showValidation(message, type) {
+            const validation = document.getElementById('dictation-validation');
+            validation.className = 'dictation-validation mt-3';
+            validation.textContent = message;
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('dictation-feedback');
+            feedback.className = 'dictation-feedback mb-3';
+            feedback.innerHTML = message;
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+        </script>
+{% endblock %}

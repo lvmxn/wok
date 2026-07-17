@@ -336,3 +336,78 @@ body {
 .modal-dialog {
     pointer-events: auto;
 }
+
+.collectionModal.modal-content {
+    border: 1px solid #495057 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+.dictation-modal-content {
+    border-color: #495057 !important;
+    border-radius: 12px !important;
+}
+
+.dictation-source-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.dictation-source-card {
+    border: 1px solid #495057;
+    border-radius: 10px;
+    padding: 14px;
+    background: linear-gradient(180deg, rgba(26, 26, 26, 1) 0%, rgba(20, 20, 20, 1) 100%);
+}
+
+.dictation-label {
+    display: inline-block;
+    color: #f8f9fa;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.dictation-help {
+    display: inline-block;
+    color: #9aa0a6;
+    margin-top: 8px;
+    font-size: 0.82rem;
+}
+
+.dictation-textarea {
+    min-height: 180px;
+    resize: vertical;
+}
+
+.dictation-validation {
+    min-height: 20px;
+    font-size: 0.9rem;
+}
+
+.dictation-card {
+    width: min(100%, 460px);
+}
+
+.dictation-caption {
+    color: #9aa0a6;
+    font-size: 0.82rem;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+}
+
+.dictation-feedback {
+    min-height: 22px;
+    font-size: 0.9rem;
+}
+
+
+@media (max-width: 767.98px) {
+    .dictation-source-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dictation-textarea {
+        min-height: 140px;
+    }
+}
