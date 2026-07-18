@@ -511,6 +511,10 @@ def my_words():
                 session["user_id"],
                 id,
             )
+            db.execute(
+                "DELETE FROM words WHERE id = ?",
+                id,
+            )
         except sqlite3.Error:
             return (
                 jsonify({"status": "error", "message": "Could not delete word"}),
